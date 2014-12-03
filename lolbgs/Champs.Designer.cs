@@ -32,10 +32,10 @@
             this.All = new System.Windows.Forms.Label();
             this.None = new System.Windows.Forms.Label();
             this.Cancel = new System.Windows.Forms.Button();
-            this.ChampsPanel = new System.Windows.Forms.Panel();
             this.Invert = new System.Windows.Forms.Label();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.ChampsPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.SuspendLayout();
             // 
             // label1
@@ -79,16 +79,6 @@
             this.Cancel.UseVisualStyleBackColor = true;
             this.Cancel.Click += new System.EventHandler(this.Close_Click);
             // 
-            // ChampsPanel
-            // 
-            this.ChampsPanel.AutoScroll = true;
-            this.ChampsPanel.BackColor = System.Drawing.SystemColors.Control;
-            this.ChampsPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.ChampsPanel.Location = new System.Drawing.Point(15, 12);
-            this.ChampsPanel.Name = "ChampsPanel";
-            this.ChampsPanel.Size = new System.Drawing.Size(597, 396);
-            this.ChampsPanel.TabIndex = 5;
-            // 
             // Invert
             // 
             this.Invert.AutoSize = true;
@@ -118,22 +108,29 @@
             this.label2.TabIndex = 8;
             this.label2.Text = "Search:";
             // 
+            // ChampsPanel
+            // 
+            this.ChampsPanel.AutoScroll = true;
+            this.ChampsPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.ChampsPanel.Location = new System.Drawing.Point(15, 12);
+            this.ChampsPanel.Name = "ChampsPanel";
+            this.ChampsPanel.Size = new System.Drawing.Size(597, 396);
+            this.ChampsPanel.TabIndex = 9;
+            // 
             // Champs
             // 
             this.AcceptButton = this.Cancel;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(624, 441);
+            this.Controls.Add(this.ChampsPanel);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.Invert);
-            this.Controls.Add(this.ChampsPanel);
             this.Controls.Add(this.Cancel);
             this.Controls.Add(this.None);
             this.Controls.Add(this.All);
             this.Controls.Add(this.label1);
-            this.Shown += Champs_Shown;
-            this.Load += Champs_Load;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "Champs";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
@@ -149,9 +146,9 @@
         private System.Windows.Forms.Label All;
         private System.Windows.Forms.Label None;
         private System.Windows.Forms.Button Cancel;
-        private System.Windows.Forms.Panel ChampsPanel;
         private System.Windows.Forms.Label Invert;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.FlowLayoutPanel ChampsPanel;
     }
 }

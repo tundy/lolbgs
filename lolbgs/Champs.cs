@@ -14,6 +14,8 @@ namespace lolbgs
         public Champs()
         {
             InitializeComponent();
+            Shown += Champs_Shown;
+            Load += Champs_Load;
         }
 
         void Champs_Load(object sender, EventArgs e)
@@ -34,8 +36,6 @@ namespace lolbgs
             var images = Directory.GetFiles(source, "*.png");
             const string pattern = "(.+)_[Ss]quare_0\\.png";
 
-            var y = 0;
-            var x = 0;
             var temp = Settings.GetChampsList();
             foreach (var image in images)
             {
@@ -44,17 +44,14 @@ namespace lolbgs
                 if (!match.Success) continue;
                 var img = new PictureBox
                 {
-                    Location = new Point(x, y),
                     Width = 96,
                     Height = 96,
                     SizeMode = PictureBoxSizeMode.StretchImage,
-                    Name = match.Groups[1].Value
+                    Name = match.Groups[1].Value,
+                    Margin = new Padding(8)
                 };
                 img.Image = temp.Contains(img.Name) ? MakeGrayscale(new Bitmap(source + match.Value)) : Image.FromFile(source + match.Value);
                 ChampsPanel.Controls.Add(img);
-                x += 112;
-                if ((x %= 560) == 0)
-                    y += 112;
             }
         }
 
