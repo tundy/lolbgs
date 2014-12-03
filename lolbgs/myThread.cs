@@ -6,8 +6,13 @@ namespace lolbgs
 {
     internal class MyThread
     {
-        private int _count; 
+        private int _count;
         private int Count { get { return ++_count; } }
+        internal void ResetCounter()
+        {
+            _count = 0;
+        }
+
         public delegate void CopyOutput(string s, int count);
         public event CopyOutput NewCopyOutput;
         internal virtual void OnCopyDone(string s)

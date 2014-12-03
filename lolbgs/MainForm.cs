@@ -113,6 +113,7 @@ namespace lolbgs
 
         private void Export_Click(object sender, EventArgs e)
         {
+            _t.ResetCounter();
             Output.Text = string.Empty;
             Export.Enabled = false;
             ProgressBar.Value = 0;
