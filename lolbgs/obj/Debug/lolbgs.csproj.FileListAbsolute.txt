@@ -1,0 +1,26 @@
+C:\Users\Matus\Documents\Visual Studio 2012\Projects\lolbgs\lolbgs\bin\Debug\lol_bgs.exe
+C:\Users\Matus\Documents\Visual Studio 2012\Projects\lolbgs\lolbgs\bin\Debug\lol_bgs.pdb
+C:\Users\Matus\Documents\Visual Studio 2012\Projects\lolbgs\lolbgs\obj\Debug\lolbgs.csprojResolveAssemblyReference.cache
+C:\Users\Matus\Documents\Visual Studio 2012\Projects\lolbgs\lolbgs\obj\Debug\lolbgs.Properties.Resources.resources
+C:\Users\Matus\Documents\Visual Studio 2012\Projects\lolbgs\lolbgs\obj\Debug\lolbgs.csproj.GenerateResource.Cache
+C:\Users\Matus\Documents\Visual Studio 2012\Projects\lolbgs\lolbgs\obj\Debug\lol_bgs.exe
+C:\Users\Matus\Documents\Visual Studio 2012\Projects\lolbgs\lolbgs\obj\Debug\lol_bgs.pdb
+C:\Users\Matus\Documents\Visual Studio 2012\Projects\lolbgs\lolbgs\obj\Debug\lolbgs.MainForm.resources
+C:\Users\Matus\Documents\Visual Studio 2012\Projects\lolbgs\lolbgs\bin\Debug\lol_bgs.exe.config
+C:\Users\Matus\Documents\Visual Studio 2012\Projects\lolbgs\lolbgs\obj\Debug\lolbgs.IgnoreList.resources
+C:\Users\Matus\Documents\Visual Studio 2013\Projects\lolbgs\lolbgs\bin\Debug\lol_bgs.exe.config
+C:\Users\Matus\Documents\Visual Studio 2013\Projects\lolbgs\lolbgs\obj\Debug\lol_bgs.exe
+C:\Users\Matus\Documents\Visual Studio 2013\Projects\lolbgs\lolbgs\obj\Debug\lol_bgs.pdb
+C:\Users\Matus\Documents\Visual Studio 2013\Projects\lolbgs\lolbgs\bin\Debug\lol_bgs.exe
+C:\Users\Matus\Documents\Visual Studio 2013\Projects\lolbgs\lolbgs\bin\Debug\lol_bgs.pdb
+C:\Users\Matus\Documents\Visual Studio 2013\Projects\lolbgs\lolbgs\obj\Debug\lolbgs.csprojResolveAssemblyReference.cache
+C:\Users\Matus\Documents\Visual Studio 2013\Projects\lolbgs\lolbgs\obj\Debug\lolbgs.About.resources
+C:\Users\Matus\Documents\Visual Studio 2013\Projects\lolbgs\lolbgs\obj\Debug\lolbgs.Champs.resources
+C:\Users\Matus\Documents\Visual Studio 2013\Projects\lolbgs\lolbgs\obj\Debug\lolbgs.IgnoreList.resources
+C:\Users\Matus\Documents\Visual Studio 2013\Projects\lolbgs\lolbgs\obj\Debug\lolbgs.MainForm.resources
+C:\Users\Matus\Documents\Visual Studio 2013\Projects\lolbgs\lolbgs\obj\Debug\lolbgs.Options.resources
+C:\Users\Matus\Documents\Visual Studio 2013\Projects\lolbgs\lolbgs\obj\Debug\lolbgs.Properties.Resources.resources
+C:\Users\Matus\Documents\Visual Studio 2013\Projects\lolbgs\lolbgs\obj\Debug\lolbgs.csproj.GenerateResource.Cache
+D:\GitHub\lolbgs\lolbgs\bin\Debug\lol_bgs.exe.config
+D:\GitHub\lolbgs\lolbgs\obj\Debug\lol_bgs.exe
+D:\GitHub\lolbgs\lolbgs\obj\Debug\lol_bgs.pdb
