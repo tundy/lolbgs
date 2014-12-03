@@ -58,7 +58,7 @@ namespace lolbgs
                 if (!string.IsNullOrEmpty(r))
                     ignore += r + "\r\n";
             }
-            ignore = ignore.Trim('\r', '\n');
+            ignore = ignore.Trim();
             if (ignore.Length == 0)
                 ignore = null;
             Properties.Settings.Default.IgnoreList = ignore;

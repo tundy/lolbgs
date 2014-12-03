@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -93,7 +94,7 @@ namespace lolbgs
                 if (!string.IsNullOrEmpty(r))
                     ignore += r + "\r\n";
             }
-            ignore = ignore.Trim('\r', '\n');
+            ignore = ignore.Trim();
             if (ignore.Length == 0)
                 ignore = null;
             Properties.Settings.Default.Champs = ignore;
@@ -107,40 +108,35 @@ namespace lolbgs
 
         private void All_Click(object sender, EventArgs e)
         {
-            var temp = Settings.GetChampsList();
-#if !DEBUG
-            if (temp.Capacity > 75)
-            {
-                Properties.Settings.Default.Champs = null;
-                Properties.Settings.Default.Save();
-                ChampsPanel.Controls.Clear();
-                Champs_Load(null, e);
-                Champs_Shown(null, e);
-            }
-            else
-            {
-#endif
-                Cursor.Current = Cursors.WaitCursor;
-                foreach (var control in ChampsPanel.Controls.OfType<PictureBox>())
-                {
-                    if (temp.Contains(control.Name))
-                        img_Click(control, e);
-                }
-                Cursor.Current = Cursors.Default;
-#if !DEBUG
-            }
-#endif
+            Cursor.Current = Cursors.WaitCursor;
+            Properties.Settings.Default.Champs = null;
+            Properties.Settings.Default.Save();
+            var source = Settings.GetRadPath();
+            foreach (var control in ChampsPanel.Controls.OfType<PictureBox>())
+                control.Image = Image.FromFile(source + control.Name + "_Square_0.png");
+            Cursor.Current = Cursors.Default;
         }
 
         private void None_Click(object sender, EventArgs e)
         {
             Cursor.Current = Cursors.WaitCursor;
-            var temp = Settings.GetChampsList();
+            var temp = new List<String>();
             foreach (var control in ChampsPanel.Controls.OfType<PictureBox>())
             {
-                if (!temp.Contains(control.Name))
-                    img_Click(control, e);
+                temp.Add(control.Name);
+                control.Image = MakeGrayscale(new Bitmap(control.Image));
             }
+            var ignore = string.Empty;
+            foreach (var r in temp)
+            {
+                if (!string.IsNullOrEmpty(r))
+                    ignore += r + "\r\n";
+            }
+            ignore = ignore.Trim();
+            if (ignore.Length == 0)
+                ignore = null;
+            Properties.Settings.Default.Champs = ignore;
+            Properties.Settings.Default.Save();
             Cursor.Current = Cursors.Default;
         }
 
