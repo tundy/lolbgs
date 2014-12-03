@@ -143,10 +143,36 @@ namespace lolbgs
         private void Invert_Click(object sender, EventArgs e)
         {
             Cursor.Current = Cursors.WaitCursor;
-            foreach (var control in ChampsPanel.Controls.OfType<PictureBox>())
+            var temp = Settings.GetChampsList();
+            foreach (var img in ChampsPanel.Controls.OfType<PictureBox>())
             {
-                img_Click(control, e);
+                if (temp.Contains(img.Name, StringComparer.OrdinalIgnoreCase))
+                {
+                    if (img.Name == "Corki")
+                        temp.Remove("Corky");
+                    temp.Remove(img.Name);
+                    img.Image = Image.FromFile(Settings.GetRadPath() + img.Name + "_Square_0.png");
+                }
+                else
+                {
+                    if (img.Name == "Corki")
+                        temp.Add("Corky");
+                    temp.Add(img.Name);
+                    img.Image = MakeGrayscale(new Bitmap(img.Image));
+                }
+
             }
+            var ignore = string.Empty;
+            foreach (var r in temp)
+            {
+                if (!string.IsNullOrEmpty(r))
+                    ignore += r + "\r\n";
+            }
+            ignore = ignore.Trim();
+            if (ignore.Length == 0)
+                ignore = null;
+            Properties.Settings.Default.Champs = ignore;
+            Properties.Settings.Default.Save();
             Cursor.Current = Cursors.Default;
         }
 
