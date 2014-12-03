@@ -108,6 +108,7 @@ namespace lolbgs
         private void All_Click(object sender, EventArgs e)
         {
             var temp = Settings.GetChampsList();
+#if !DEBUG
             if (temp.Capacity > 75)
             {
                 Properties.Settings.Default.Champs = null;
@@ -118,6 +119,7 @@ namespace lolbgs
             }
             else
             {
+#endif
                 Cursor.Current = Cursors.WaitCursor;
                 foreach (var control in ChampsPanel.Controls.OfType<PictureBox>())
                 {
@@ -125,7 +127,9 @@ namespace lolbgs
                         img_Click(control, e);
                 }
                 Cursor.Current = Cursors.Default;
+#if !DEBUG
             }
+#endif
         }
 
         private void None_Click(object sender, EventArgs e)

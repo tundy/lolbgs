@@ -133,6 +133,7 @@ namespace lolbgs
                 var splashArts = new List<string>();
                 foreach (var image in images)
                 {
+// ReSharper disable once AssignNullToNotNullAttribute
                     var match = Regex.Match(Path.GetFileName(image), pattern);
                     if (match.Success)
                         splashArts.Add(match.Value);
