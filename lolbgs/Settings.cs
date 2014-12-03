@@ -39,5 +39,11 @@ namespace lolbgs
                 return null;
             return source;
         }
+        
+        /*static bool IsWinVistaOrHigher()
+        {
+            OperatingSystem os = Environment.OSVersion;
+            return (os.Platform == PlatformID.Win32NT) && (os.Version.Major >= 6);
+        }*/
     }
 }
