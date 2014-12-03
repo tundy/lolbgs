@@ -15,4 +15,5 @@ League of Legends Backgrounds Exporter
 * Search in Allowed Champions
 * Auto Ignore not finished splash arts
 <hr>
-<img src="Screnshot.png" alt="screenshot"/>
+
+<img src="Screenshot.png"/>
