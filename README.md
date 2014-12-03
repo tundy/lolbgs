@@ -14,6 +14,7 @@ League of Legends Backgrounds Exporter
 <b>To Do:</b>
 * Search in Allowed Champions
 * Auto Ignore not finished splash arts
+* Set images as Dekstop Backgrounds (Win7+)
 <hr>
 
 <img src="Screenshot.png"/>
