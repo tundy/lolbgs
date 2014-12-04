@@ -33,7 +33,7 @@
             this.None = new System.Windows.Forms.Label();
             this.Cancel = new System.Windows.Forms.Button();
             this.Invert = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.Search = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.ChampsPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.SuspendLayout();
@@ -90,14 +90,13 @@
             this.Invert.Text = "Invert";
             this.Invert.Click += new System.EventHandler(this.Invert_Click);
             // 
-            // textBox1
+            // Search
             // 
-            this.textBox1.Location = new System.Drawing.Point(299, 417);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.Size = new System.Drawing.Size(100, 20);
-            this.textBox1.TabIndex = 7;
-            this.textBox1.Text = "    WIP ...";
+            this.Search.Location = new System.Drawing.Point(299, 417);
+            this.Search.Name = "Search";
+            this.Search.Size = new System.Drawing.Size(100, 20);
+            this.Search.TabIndex = 7;
+            this.Search.TextChanged += new System.EventHandler(this.Search_TextChanged);
             // 
             // label2
             // 
@@ -125,7 +124,7 @@
             this.ClientSize = new System.Drawing.Size(624, 441);
             this.Controls.Add(this.ChampsPanel);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.Search);
             this.Controls.Add(this.Invert);
             this.Controls.Add(this.Cancel);
             this.Controls.Add(this.None);
@@ -147,7 +146,7 @@
         private System.Windows.Forms.Label None;
         private System.Windows.Forms.Button Cancel;
         private System.Windows.Forms.Label Invert;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox Search;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.FlowLayoutPanel ChampsPanel;
     }

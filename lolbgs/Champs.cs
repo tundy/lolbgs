@@ -173,6 +173,16 @@ namespace lolbgs
             Cursor.Current = Cursors.Default;
         }
 
+        private void Search_TextChanged(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(Search.Text))
+                foreach (var img in ChampsPanel.Controls.OfType<PictureBox>())
+                    img.Visible = true;
+            else
+                foreach (var img in ChampsPanel.Controls.OfType<PictureBox>())
+                    img.Visible = img.Name.IndexOf(Search.Text, StringComparison.CurrentCultureIgnoreCase) != -1;
+        }
+
         public static Bitmap MakeGrayscale(Bitmap original)
         {
             //create a blank bitmap the same size as original
