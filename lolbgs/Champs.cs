@@ -48,7 +48,8 @@ namespace lolbgs
                     Height = 96,
                     SizeMode = PictureBoxSizeMode.StretchImage,
                     Name = match.Groups[1].Value,
-                    Margin = new Padding(8)
+                    Margin = new Padding(8),
+                    BorderStyle = BorderStyle.Fixed3D
                 };
                 img.Image = temp.Contains(img.Name) ? MakeGrayscale(new Bitmap(source + match.Value)) : Image.FromFile(source + match.Value);
                 ChampsPanel.Controls.Add(img);
