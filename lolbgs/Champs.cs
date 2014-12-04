@@ -181,7 +181,7 @@ namespace lolbgs
                 foreach (var img in ChampsPanel.Controls.OfType<PictureBox>())
                     img.Visible = true;
             else
-                foreach (var img in ChampsPanel.Controls.OfType<PictureBox>())
+                foreach (var img in ChampsPanel.Controls.OfType<PictureBox>().Reverse())    // Revesre is faster 'cos it don't need to redraw so often
                     img.Visible = img.Name.IndexOf(Search.Text, StringComparison.CurrentCultureIgnoreCase) != -1;
         }
 
