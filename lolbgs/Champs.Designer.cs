@@ -40,6 +40,7 @@
             // 
             // label1
             // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(12, 419);
             this.label1.Name = "label1";
@@ -49,6 +50,7 @@
             // 
             // All
             // 
+            this.All.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.All.AutoSize = true;
             this.All.ForeColor = System.Drawing.Color.Blue;
             this.All.Location = new System.Drawing.Point(58, 419);
@@ -60,6 +62,7 @@
             // 
             // None
             // 
+            this.None.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.None.AutoSize = true;
             this.None.ForeColor = System.Drawing.Color.Blue;
             this.None.Location = new System.Drawing.Point(82, 419);
@@ -71,6 +74,7 @@
             // 
             // Cancel
             // 
+            this.Cancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.Cancel.Location = new System.Drawing.Point(555, 414);
             this.Cancel.Name = "Cancel";
             this.Cancel.Size = new System.Drawing.Size(57, 23);
@@ -81,6 +85,7 @@
             // 
             // Invert
             // 
+            this.Invert.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.Invert.AutoSize = true;
             this.Invert.ForeColor = System.Drawing.Color.Blue;
             this.Invert.Location = new System.Drawing.Point(121, 419);
@@ -92,6 +97,8 @@
             // 
             // Search
             // 
+            this.Search.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.Search.Location = new System.Drawing.Point(299, 417);
             this.Search.Name = "Search";
             this.Search.Size = new System.Drawing.Size(100, 20);
@@ -100,6 +107,7 @@
             // 
             // label2
             // 
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(249, 420);
             this.label2.Name = "label2";
@@ -109,6 +117,9 @@
             // 
             // ChampsPanel
             // 
+            this.ChampsPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.ChampsPanel.AutoScroll = true;
             this.ChampsPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.ChampsPanel.Location = new System.Drawing.Point(15, 12);
@@ -130,7 +141,8 @@
             this.Controls.Add(this.None);
             this.Controls.Add(this.All);
             this.Controls.Add(this.label1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
+            this.MinimumSize = new System.Drawing.Size(640, 480);
             this.Name = "Champs";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Allowed Champions";
