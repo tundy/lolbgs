@@ -9,10 +9,10 @@ League of Legends Backgrounds Exporter
 * Allowed Champions List (if you don't want backgrouds from everyone)
 * Copy All splash arts
 * mailto: me :)
+* Search in Allowed Champions
 
 <hr>
 <b>To Do:</b>
-* Search in Allowed Champions
 * Auto Ignore not finished splash arts
 * Set images as Dekstop Backgrounds (Vista+)
 <hr>
