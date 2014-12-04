@@ -22,7 +22,7 @@ namespace lolbgs
         {
             Text += @"      [LOADING...]";
             Cursor.Current = Cursors.WaitCursor;
-            SuspendLayout();
+
             string source;
             try
             {
@@ -53,17 +53,14 @@ namespace lolbgs
                 img.Image = temp.Contains(img.Name) ? MakeGrayscale(new Bitmap(source + match.Value)) : Image.FromFile(source + match.Value);
                 ChampsPanel.Controls.Add(img);
             }
-            ResumeLayout();
         }
 
         void Champs_Shown(object sender, EventArgs e)
         {
-            SuspendLayout();
             foreach (var control in ChampsPanel.Controls.OfType<PictureBox>())
                 control.Click += img_Click;
             if (Text.EndsWith("      [LOADING...]"))
                 Text = Text.Substring(0, Text.LastIndexOf("      [LOADING...]", StringComparison.Ordinal));
-            ResumeLayout();
             Cursor.Current = Cursors.Default;
         }
 
@@ -109,20 +106,17 @@ namespace lolbgs
         private void All_Click(object sender, EventArgs e)
         {
             Cursor.Current = Cursors.WaitCursor;
-            SuspendLayout();
             Properties.Settings.Default.Champs = null;
             Properties.Settings.Default.Save();
             var source = Settings.GetRadPath();
             foreach (var control in ChampsPanel.Controls.OfType<PictureBox>())
                 control.Image = Image.FromFile(source + control.Name + "_Square_0.png");
-            ResumeLayout();
             Cursor.Current = Cursors.Default;
         }
 
         private void None_Click(object sender, EventArgs e)
         {
             Cursor.Current = Cursors.WaitCursor;
-            SuspendLayout();
             var temp = new List<String>();
             foreach (var control in ChampsPanel.Controls.OfType<PictureBox>())
             {
@@ -142,14 +136,12 @@ namespace lolbgs
                 ignore = null;
             Properties.Settings.Default.Champs = ignore;
             Properties.Settings.Default.Save();
-            ResumeLayout();
             Cursor.Current = Cursors.Default;
         }
 
         private void Invert_Click(object sender, EventArgs e)
         {
             Cursor.Current = Cursors.WaitCursor;
-            SuspendLayout();
             var temp = Settings.GetChampsList();
             foreach (var img in ChampsPanel.Controls.OfType<PictureBox>())
             {
@@ -180,20 +172,17 @@ namespace lolbgs
                 ignore = null;
             Properties.Settings.Default.Champs = ignore;
             Properties.Settings.Default.Save();
-            ResumeLayout();
             Cursor.Current = Cursors.Default;
         }
 
         private void Search_TextChanged(object sender, EventArgs e)
         {
-            SuspendLayout();
             if (string.IsNullOrEmpty(Search.Text))
                 foreach (var img in ChampsPanel.Controls.OfType<PictureBox>())
                     img.Visible = true;
             else
-                foreach (var img in ChampsPanel.Controls.OfType<PictureBox>().Reverse())
+                foreach (var img in ChampsPanel.Controls.OfType<PictureBox>().Reverse())    // Revesre is faster 'cos it don't need to redraw so often
                     img.Visible = img.Name.IndexOf(Search.Text, StringComparison.CurrentCultureIgnoreCase) != -1;
-            ResumeLayout();
         }
 
         public static Bitmap MakeGrayscale(Bitmap original)
