@@ -49,7 +49,7 @@ namespace lolbgs
                     }
                     else
                     {
-                        _t.OnCopyDone("Ignoring [not finished] " + champ + "\r\n");
+                        _t.OnCopyDone("Ignoring (not finished) " + champ + "\r\n");
                     }
                 }
                 else
