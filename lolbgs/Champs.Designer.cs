@@ -132,6 +132,7 @@
             this.AcceptButton = this.Cancel;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.Cancel;
             this.ClientSize = new System.Drawing.Size(624, 441);
             this.Controls.Add(this.ChampsPanel);
             this.Controls.Add(this.label2);
