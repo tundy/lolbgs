@@ -120,6 +120,8 @@ namespace lolbgs
             var temp = new List<String>();
             foreach (var control in ChampsPanel.Controls.OfType<PictureBox>())
             {
+                if (control.Name == "Corki")
+                    temp.Add("Corky");
                 temp.Add(control.Name);
                 control.Image = MakeGrayscale(new Bitmap(control.Image));
             }

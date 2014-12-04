@@ -3,8 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="IgnoreList" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Hecarim_Splash_5.jpg
-Zed_Splash_3.jpg</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="LeagueFolder" Type="System.String" Scope="User">
       <Value Profile="(Default)" />

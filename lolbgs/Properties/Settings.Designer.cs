@@ -25,7 +25,7 @@ namespace lolbgs.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Hecarim_Splash_5.jpg\r\nZed_Splash_3.jpg")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string IgnoreList {
             get {
                 return ((string)(this["IgnoreList"]));
