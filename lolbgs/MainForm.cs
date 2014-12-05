@@ -15,28 +15,14 @@ namespace lolbgs
         {
             if (string.IsNullOrEmpty(Properties.Settings.Default.LeagueFolder))
             {
-                var temp = (string) Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null);
-                if (string.IsNullOrEmpty(temp))
-                {
-                    temp = (string)Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Classes\VirtualStore\MACHINE\SOFTWARE\Wow6432Node\RIOT GAMES\RADS", "LOCALROOTFOLDER", null);
-                    if (string.IsNullOrEmpty(temp))
-                    {
-                        temp = (string)Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Classes\VirtualStore\MACHINE\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null);
-                        if (string.IsNullOrEmpty(temp))
-                        {
-                            temp = (string)Registry.GetValue(@"HKEY_CURRENT_USER\Software\Wow6432Node\Riot Games\RADS", "LOCALROOTFOLDER", null);
-                            if (string.IsNullOrEmpty(temp))
-                            {
-                                temp = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Wow6432Node\Riot Games\RADS", "LOCALROOTFOLDER", null);
-                                if (string.IsNullOrEmpty(temp))
-                                {
-                                    temp = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null);
-                                }
-                            }
-                        }
-                    }
-                }
-                if (string.IsNullOrEmpty(temp) == false) Properties.Settings.Default.LeagueFolder = Directory.GetParent(temp).ToString();
+                var temp = (string)Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null)
+                    ?? (string)Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Classes\VirtualStore\MACHINE\SOFTWARE\Wow6432Node\RIOT GAMES\RADS", "LOCALROOTFOLDER", null)
+                    ?? (string)Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Classes\VirtualStore\MACHINE\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null)
+                    ?? (string)Registry.GetValue(@"HKEY_CURRENT_USER\Software\Wow6432Node\Riot Games\RADS", "LOCALROOTFOLDER", null)
+                    ?? (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Wow6432Node\Riot Games\RADS", "LOCALROOTFOLDER", null)
+                    ?? (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null);
+
+                Properties.Settings.Default.LeagueFolder = temp != null ? Directory.GetParent(temp).ToString() : @"C:\Riot Games\League of Legends";
             }
 
             if (Properties.Settings.Default.DestinationFolder == String.Empty)
