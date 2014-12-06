@@ -11,10 +11,10 @@ League of Legends Backgrounds Exporter
 * mailto: me :)
 * Search in Allowed Champions
 * Auto Ignore not finished splash arts
+* Check for Duplicates (TPA, SKT T1, ...)
 
 <hr>
 <b>To Do:</b>
-* Skip Duplicates (TPA, SKT T1, ...)
 * Set images as Dekstop Backgrounds (Vista+)
 <hr>
 
