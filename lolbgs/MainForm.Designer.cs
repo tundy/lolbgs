@@ -37,7 +37,7 @@
             this.Output = new System.Windows.Forms.TextBox();
             this.ProgressBar = new System.Windows.Forms.ProgressBar();
             this.Export = new System.Windows.Forms.Button();
-            this.Ignore = new System.Windows.Forms.Button();
+            this.Options = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // LeagueFolderLabel
@@ -136,23 +136,23 @@
             this.Export.UseVisualStyleBackColor = true;
             this.Export.Click += new System.EventHandler(this.Export_Click);
             // 
-            // Ignore
+            // Options
             // 
-            this.Ignore.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.Ignore.Location = new System.Drawing.Point(464, 407);
-            this.Ignore.Name = "Ignore";
-            this.Ignore.Size = new System.Drawing.Size(81, 23);
-            this.Ignore.TabIndex = 9;
-            this.Ignore.Text = "More Options";
-            this.Ignore.UseVisualStyleBackColor = true;
-            this.Ignore.Click += new System.EventHandler(this.Options_Click);
+            this.Options.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.Options.Location = new System.Drawing.Point(464, 407);
+            this.Options.Name = "Options";
+            this.Options.Size = new System.Drawing.Size(81, 23);
+            this.Options.TabIndex = 9;
+            this.Options.Text = "More Options";
+            this.Options.UseVisualStyleBackColor = true;
+            this.Options.Click += new System.EventHandler(this.Options_Click);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(620, 438);
-            this.Controls.Add(this.Ignore);
+            this.ClientSize = new System.Drawing.Size(624, 442);
+            this.Controls.Add(this.Options);
             this.Controls.Add(this.Export);
             this.Controls.Add(this.ProgressBar);
             this.Controls.Add(this.Output);
@@ -182,7 +182,7 @@
         private System.Windows.Forms.TextBox Output;
         private System.Windows.Forms.ProgressBar ProgressBar;
         private System.Windows.Forms.Button Export;
-        private System.Windows.Forms.Button Ignore;
+        private System.Windows.Forms.Button Options;
     }
 }
 

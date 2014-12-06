@@ -38,26 +38,26 @@ namespace lolbgs
                         try
                         {
                             File.Copy(sourcePath + champ, _destinationPath + champ, true);
-                            _t.OnCopyDone("File copied from " + sourcePath + champ + " to " + _destinationPath + champ +
+                            _t.OnJobDone("File copied from " + sourcePath + champ + " to " + _destinationPath + champ +
                                             " successfully!\r\n");
                         }
                         catch
                         {
-                            _t.OnCopyDone("Failed to copy from " + sourcePath + champ + " to " + _destinationPath +
+                            _t.OnJobDone("Failed to copy from " + sourcePath + champ + " to " + _destinationPath +
                                             champ + " !\r\n");
                         }
                     }
                     else
                     {
-                        _t.OnCopyDone("Ignoring (not finished) " + champ + "\r\n");
+                        _t.OnJobDone("Ignoring (not finished) " + champ + "\r\n");
                     }
                 }
                 else
                 {
-                    _t.OnCopyDone("Ignoring " + champ + "\r\n");
+                    _t.OnJobDone("Ignoring " + champ + "\r\n");
                 }
             }
-            _t.OnCopyFinished();
+            _t.OnJobFinished();
         }
         internal static bool IsEmptySplash(Bitmap splash)
         {

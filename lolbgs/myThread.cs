@@ -13,21 +13,31 @@ namespace lolbgs
             _count = 0;
         }
 
-        public delegate void CopyOutput(string s, int count);
-        public event CopyOutput NewCopyOutput;
-        internal virtual void OnCopyDone(string s)
+        public delegate void JobOutput(string s, int count);
+        public event JobOutput NewJobOutput;
+        internal virtual void OnJobDone(string s)
         {
-            var handler = NewCopyOutput;
+            var handler = NewJobOutput;
             if (handler != null)
             {
                 handler(s, Count);
             }
         }
-        public delegate void CopyFinished();
-        public event CopyFinished NewCopyFinished;
-        internal virtual void OnCopyFinished()
+        internal virtual void OnJobDone(string s, int count)
         {
-            var handler = NewCopyFinished;
+            _count = count;
+            var handler = NewJobOutput;
+            if (handler != null)
+            {
+                handler(s, count);
+            }
+        }
+
+        public delegate void JobFinished();
+        public event JobFinished NewJobFinished;
+        internal virtual void OnJobFinished()
+        {
+            var handler = NewJobFinished;
             if (handler != null)
             {
                 handler();
@@ -36,11 +46,12 @@ namespace lolbgs
 
         internal void Copy(String destinationPath, List<String> images)
         {
-            var t = new Thread(new Copy(this, destinationPath, images).Run)
-            {
-                IsBackground = true
-            };
-            t.Start();
+            new Thread(new Copy(this, destinationPath, images).Run) { IsBackground = true }.Start();
+        }
+
+        internal void CheckDuplicates(String destinationPath, List<String> images)
+        {
+            new Thread(new Check(this, destinationPath, images).Run) { IsBackground = true }.Start();
         }
     }
 }

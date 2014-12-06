@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace lolbgs
 {
@@ -7,11 +8,13 @@ namespace lolbgs
         public Options()
         {
             InitializeComponent();
+            Duplicates.DialogResult = DialogResult.Retry;
+            Cancel.DialogResult = DialogResult.Cancel;
         }
 
         private void Close_Click(object sender, System.EventArgs e)
         {
-            Close();
+            Dispose(true);
         }
 
         private void About_Click(object sender, System.EventArgs e)
@@ -27,6 +30,11 @@ namespace lolbgs
         private void Allowed_Click(object sender, System.EventArgs e)
         {
             new Champs().ShowDialog();
+        }
+
+        private void Duplicates_Click(object sender, System.EventArgs e)
+        {
+            Dispose(true);
         }
     }
 }

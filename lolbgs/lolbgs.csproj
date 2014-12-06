@@ -59,6 +59,7 @@
     <Compile Include="Champs.Designer.cs">
       <DependentUpon>Champs.cs</DependentUpon>
     </Compile>
+    <Compile Include="Check.cs" />
     <Compile Include="Copy.cs" />
     <Compile Include="IgnoreList.cs">
       <SubType>Form</SubType>
