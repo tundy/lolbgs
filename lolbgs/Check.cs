@@ -35,7 +35,10 @@ namespace lolbgs
                     if (champ2.StartsWith(champ1.Split('_')[0])) continue;
                     var b = new Bitmap(_destinationPath + champ2);
                     if (!Compare(a, b))
+                    {
+                        b.Dispose();
                         continue;
+                    }
                     b.Dispose();
                     if (_duplicates.ContainsKey(champ1))
                         _duplicates[champ1].Add(champ2);
@@ -48,6 +51,7 @@ namespace lolbgs
                 a.Dispose();
                 _t.OnJobDone(champ1 + " comparing done " + Environment.NewLine, count++);
             }
+
             var text = string.Empty;
             _t.OnJobDone(Environment.NewLine + "Found this duplicates:" + Environment.NewLine, --count);
             foreach (var duplicate in _duplicates)
@@ -80,15 +84,12 @@ namespace lolbgs
 
         internal static bool Compare(Bitmap imageA, Bitmap imageB)
         {
-            if (imageA.Size != imageB.Size) return false;
+            if (imageA.Size != imageB.Size)
+                return false;
             for (var x = 1; x < imageA.Width; x+=200)
-            {
                 for (var y = 1; y < imageA.Height; y+=100)
-                {
-                    if (imageA.GetPixel(x, y) == imageB.GetPixel(x, y)) continue;
-                    return false;
-                }
-            }
+                    if (imageA.GetPixel(x, y) != imageB.GetPixel(x, y))
+                        return false;
             return true;
         }
     }

@@ -202,7 +202,7 @@ namespace lolbgs
                 if (seconds > 60)
                     text += (seconds / 60).ToString("0.#") + @" minute(s) ";
                 else
-                    text += seconds + @" second(s) ";
+                    text += seconds.ToString("0.#") + @" second(s) ";
                 text += " +/- Half that time.";
                 var result =
                     MessageBox.Show(
