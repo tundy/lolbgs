@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
+using ContentAlignment = System.Drawing.ContentAlignment;
 
 namespace lolbgs
 {
@@ -22,7 +24,6 @@ namespace lolbgs
         {
             Text += @"      [LOADING...]";
             Cursor.Current = Cursors.WaitCursor;
-
             string source;
             try
             {
@@ -37,36 +38,36 @@ namespace lolbgs
             const string pattern = "(.+)_[Ss]quare_0\\.png";
 
             var temp = Settings.GetChampsList();
+
             foreach (var image in images)
             {
                 // ReSharper disable once AssignNullToNotNullAttribute
                 var match = Regex.Match(Path.GetFileName(image), pattern);
                 if (!match.Success) continue;
-                var img = new PictureBox
+                ChampsPanel.Controls.Add(new Picture
                 {
                     Width = 96,
                     Height = 96,
                     SizeMode = PictureBoxSizeMode.StretchImage,
                     Name = match.Groups[1].Value,
                     Margin = new Padding(8),
-                    BorderStyle = BorderStyle.Fixed3D
-                };
-                img.Image = temp.Contains(img.Name) ? MakeGrayscale(new Bitmap(source + match.Value)) : Image.FromFile(source + match.Value);
-                ChampsPanel.Controls.Add(img);
+                    BorderStyle = BorderStyle.Fixed3D,
+                    Cursor = Cursors.Hand,
+                    Image = temp.Contains(match.Groups[1].Value) ? MakeGrayscale(new Bitmap(source + match.Value)) : Image.FromFile(source + match.Value)
+                });
             }
         }
 
         void Champs_Shown(object sender, EventArgs e)
         {
-            foreach (var control in ChampsPanel.Controls.OfType<PictureBox>())
-                control.Click += img_Click;
+            foreach (var control in ChampsPanel.Controls.OfType<Picture>())
+                control.PictureBox.Click += img_Click;
             if (Text.EndsWith("      [LOADING...]"))
                 Text = Text.Substring(0, Text.LastIndexOf("      [LOADING...]", StringComparison.Ordinal));
             Cursor.Current = Cursors.Default;
         }
-
-
-        static void img_Click(object sender, EventArgs e)
+        
+       static void img_Click(object sender, EventArgs e)
         {
             var temp = Settings.GetChampsList();
             var img = sender as PictureBox;
@@ -110,8 +111,8 @@ namespace lolbgs
             Properties.Settings.Default.Champs = null;
             Properties.Settings.Default.Save();
             var source = Settings.GetRadPath();
-            foreach (var control in ChampsPanel.Controls.OfType<PictureBox>())
-                control.Image = Image.FromFile(source + control.Name + "_Square_0.png");
+            foreach (var control in ChampsPanel.Controls.OfType<Picture>())
+                control.PictureBox.Image = Image.FromFile(source + control.Name + "_Square_0.png");
             Cursor.Current = Cursors.Default;
         }
 
@@ -119,12 +120,12 @@ namespace lolbgs
         {
             Cursor.Current = Cursors.WaitCursor;
             var temp = new List<String>();
-            foreach (var control in ChampsPanel.Controls.OfType<PictureBox>())
+            foreach (var control in ChampsPanel.Controls.OfType<Picture>())
             {
                 if (control.Name == "Corki")
                     temp.Add("Corky");
                 temp.Add(control.Name);
-                control.Image = MakeGrayscale(new Bitmap(control.Image));
+                control.PictureBox.Image = MakeGrayscale(new Bitmap(control.PictureBox.Image));
             }
             var ignore = string.Empty;
             foreach (var r in temp)
@@ -144,21 +145,21 @@ namespace lolbgs
         {
             Cursor.Current = Cursors.WaitCursor;
             var temp = Settings.GetChampsList();
-            foreach (var img in ChampsPanel.Controls.OfType<PictureBox>())
+            foreach (var img in ChampsPanel.Controls.OfType<Picture>())
             {
                 if (temp.Contains(img.Name, StringComparer.OrdinalIgnoreCase))
                 {
                     if (img.Name == "Corki")
                         temp.Remove("Corky");
                     temp.Remove(img.Name);
-                    img.Image = Image.FromFile(Settings.GetRadPath() + img.Name + "_Square_0.png");
+                    img.PictureBox.Image = Image.FromFile(Settings.GetRadPath() + img.Name + "_Square_0.png");
                 }
                 else
                 {
                     if (img.Name == "Corki")
                         temp.Add("Corky");
                     temp.Add(img.Name);
-                    img.Image = MakeGrayscale(new Bitmap(img.Image));
+                    img.PictureBox.Image = MakeGrayscale(new Bitmap(img.PictureBox.Image));
                 }
 
             }
@@ -178,12 +179,14 @@ namespace lolbgs
 
         private void Search_TextChanged(object sender, EventArgs e)
         {
+            SuspendLayout();
             if (string.IsNullOrEmpty(Search.Text))
-                foreach (var img in ChampsPanel.Controls.OfType<PictureBox>())
+                foreach (var img in ChampsPanel.Controls.OfType<Picture>())
                     img.Visible = true;
             else
-                foreach (var img in ChampsPanel.Controls.OfType<PictureBox>().Reverse())    // Revesre is faster 'cos it don't need to redraw so often
-                    img.Visible = img.Name.IndexOf(Search.Text, StringComparison.CurrentCultureIgnoreCase) != -1;
+                foreach (var img in ChampsPanel.Controls.OfType<Picture>().Reverse())   // Revesre is faster 'cos it don't need to redraw so often
+                    img.Visible = img.Name.IndexOf(Regex.Replace(Search.Text, @"[']+", ""), StringComparison.CurrentCultureIgnoreCase) != -1;   // Ignore Apostrophe
+            ResumeLayout();
         }
 
         public static Bitmap MakeGrayscale(Bitmap original)
