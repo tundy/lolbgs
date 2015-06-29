@@ -1,0 +1,9 @@
+D:\GitHub\lolbgs\LeagueBackgrounds\bin\Debug\LeagueBackgrounds.exe.config
+D:\GitHub\lolbgs\LeagueBackgrounds\bin\Debug\LeagueBackgrounds.exe
+D:\GitHub\lolbgs\LeagueBackgrounds\bin\Debug\LeagueBackgrounds.pdb
+D:\GitHub\lolbgs\LeagueBackgrounds\obj\Debug\LeagueBackgrounds.MainForm.resources
+D:\GitHub\lolbgs\LeagueBackgrounds\obj\Debug\LeagueBackgrounds.Picture.resources
+D:\GitHub\lolbgs\LeagueBackgrounds\obj\Debug\LeagueBackgrounds.Properties.Resources.resources
+D:\GitHub\lolbgs\LeagueBackgrounds\obj\Debug\LeagueBackgrounds.csproj.GenerateResource.Cache
+D:\GitHub\lolbgs\LeagueBackgrounds\obj\Debug\LeagueBackgrounds.exe
+D:\GitHub\lolbgs\LeagueBackgrounds\obj\Debug\LeagueBackgrounds.pdb
