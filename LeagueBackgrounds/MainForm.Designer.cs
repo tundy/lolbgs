@@ -92,13 +92,13 @@
             this.Output_TextBox.Name = "Output_TextBox";
             this.Output_TextBox.ReadOnly = true;
             this.Output_TextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.Output_TextBox.Size = new System.Drawing.Size(600, 311);
+            this.Output_TextBox.Size = new System.Drawing.Size(600, 191);
             this.Output_TextBox.TabIndex = 6;
             // 
             // Export_Button
             // 
             this.Export_Button.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.Export_Button.Location = new System.Drawing.Point(537, 407);
+            this.Export_Button.Location = new System.Drawing.Point(537, 287);
             this.Export_Button.Name = "Export_Button";
             this.Export_Button.Size = new System.Drawing.Size(75, 23);
             this.Export_Button.TabIndex = 7;
@@ -109,7 +109,7 @@
             // Options_Button
             // 
             this.Options_Button.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.Options_Button.Location = new System.Drawing.Point(447, 407);
+            this.Options_Button.Location = new System.Drawing.Point(447, 287);
             this.Options_Button.Name = "Options_Button";
             this.Options_Button.Size = new System.Drawing.Size(84, 23);
             this.Options_Button.TabIndex = 8;
@@ -120,7 +120,7 @@
             // 
             this.Output_ProgressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.Output_ProgressBar.Location = new System.Drawing.Point(12, 407);
+            this.Output_ProgressBar.Location = new System.Drawing.Point(12, 287);
             this.Output_ProgressBar.Name = "Output_ProgressBar";
             this.Output_ProgressBar.Size = new System.Drawing.Size(429, 23);
             this.Output_ProgressBar.TabIndex = 9;
@@ -148,7 +148,7 @@
             // Cancel_Button
             // 
             this.Cancel_Button.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.Cancel_Button.Location = new System.Drawing.Point(537, 407);
+            this.Cancel_Button.Location = new System.Drawing.Point(537, 287);
             this.Cancel_Button.Name = "Cancel_Button";
             this.Cancel_Button.Size = new System.Drawing.Size(75, 23);
             this.Cancel_Button.TabIndex = 10;
@@ -161,7 +161,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(632, 450);
+            this.ClientSize = new System.Drawing.Size(632, 330);
             this.Controls.Add(this.Cancel_Button);
             this.Controls.Add(this.Output_ProgressBar);
             this.Controls.Add(this.Options_Button);
@@ -174,7 +174,7 @@
             this.Controls.Add(this.LeagueFolder_TextBox);
             this.Controls.Add(this.LeagueFolder_Label);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MinimumSize = new System.Drawing.Size(640, 480);
+            this.MinimumSize = new System.Drawing.Size(640, 360);
             this.Name = "MainForm";
             this.Text = "League of Legends Backgrounds Exporter";
             this.Activated += new System.EventHandler(this.MainForm_Activated);
