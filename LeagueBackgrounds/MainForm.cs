@@ -91,71 +91,49 @@ namespace LeagueBackgrounds
             if (splashArts == null) return;
             var count = 0;
             var destinationPath = Properties.Settings.Default.DestinationFolder.TrimEnd('\\') + "\\";
-            var duplicates = new Dictionary<string, List<string>>();
+            var duplicates = new List<string>();
 
-            _checkWorker.ReportProgress(count, "Loading: ");
-            var tempList = new Dictionary<string, List<Color>>();
-            foreach (string art in splashArts)
+            var tempList = new List<Tuple<string, Color[]>>();
+            foreach (var art in splashArts)
             {
                 if (_checkWorker.CancellationPending) return;
+                _checkWorker.ReportProgress(count++);
                 var bmp = new Bitmap(destinationPath + art);
-                var temp = new List<Color>();
-                for (var x = 1; x < bmp.Width; x += 200)
-                    for (var y = 1; y < bmp.Height; y += 100)
-                        temp.Add(bmp.GetPixel(x, y));
-                tempList.Add(art, temp);
+                var temp = new Color[(1 + bmp.Width/50)*(1 + bmp.Height/50)];
+                var i = 0;
+                for (var x = 0; x < bmp.Width; x += 50)
+                    for (var y = 0; y < bmp.Height; y += 50)
+                        temp[i++] = bmp.GetPixel(x, y);
+                tempList.Add(new Tuple<string, Color[]>(art, temp));
                 bmp.Dispose();
-                _checkWorker.ReportProgress(count++, ". ");
             }
 
-            _checkWorker.ReportProgress(count, Environment.NewLine);
-            for (var index = 0; index < tempList.Count; index++)
+            _checkWorker.ReportProgress(count);
+            while (tempList.Count > 0)
             {
                 if (_checkWorker.CancellationPending) return;
+                _checkWorker.ReportProgress(count++);
                 var champ1 = tempList.First();
-                tempList.Remove(champ1.Key);
-                index--;
-                _checkWorker.ReportProgress(count, "Comparing " + champ1.Key + ": ");
+                tempList.Remove(champ1);
                 foreach (var bitmap in tempList)
                 {
                     if (_checkWorker.CancellationPending) return;
                     var champ2 = bitmap;
-                    if (champ2.Key.StartsWith(champ1.Key.Split('_')[0]))
-                    {
-                        _checkWorker.ReportProgress(count, ". ");
-                        continue;
-                    }
-                    if (!Static.CompareSplash(champ1.Value, champ2.Value))
-                    {
-                        _checkWorker.ReportProgress(count, ". ");
-                        continue;
-                    }
-                    if (duplicates.ContainsKey(champ1.Key))
-                        duplicates[champ1.Key].Add(champ2.Key);
-                    else
-                        duplicates.Add(champ1.Key, new List<string> { champ2.Key });
-
-                    _checkWorker.ReportProgress(count, Environment.NewLine + champ2.Key + " is duplicate of " + champ1.Key + " ");
+                    if (champ2.Item1.StartsWith(champ1.Item1.Split('_')[0])) continue;
+                    if (!Static.CompareSplash(champ1.Item2, champ2.Item2)) continue;
+                    duplicates.Add(champ2.Item1);
+                    _checkWorker.ReportProgress(count, champ1.Item1 + "\t is duplicate of\t " + champ2.Item1 + Environment.NewLine);
                 }
-                _checkWorker.ReportProgress(count++, Environment.NewLine + champ1.Key + " comparing done " + Environment.NewLine + Environment.NewLine);
             }
-
-            if (_checkWorker.CancellationPending) return;
-            var text = string.Empty;
-            _checkWorker.ReportProgress(count, Environment.NewLine + "Found this duplicates:" + Environment.NewLine);
-            foreach (var duplicate in duplicates)
-                foreach (var img in duplicate.Value)
-                    text += img + " is duplicate of " + duplicate.Key + Environment.NewLine;
-            _checkWorker.ReportProgress(count, text);
 
             var tmp = Static.GetIgnoreList();
             foreach (var duplicate in duplicates)
-                foreach (var img in duplicate.Value)
-                {
-                    File.Delete(destinationPath + img);
-                    if (!tmp.Contains(img))
-                        tmp.Add(img);
-                }
+            {
+                if (_checkWorker.CancellationPending) return;
+                File.Delete(destinationPath + duplicate);
+                if (!tmp.Contains(duplicate))
+                    tmp.Add(duplicate);
+            }
 
             var ignore = string.Empty;
             foreach (var r in tmp)
@@ -237,9 +215,7 @@ namespace LeagueBackgrounds
 
         private void DisableMainForm()
         {
-            //Cancel_Button.Enabled = true;
             Cancel_Button.Visible = true;
-            //Export_Button.Enabled = false;
             Export_Button.Visible = false;
             Options_Button.Enabled = false;
             LeagueFolder_Button.Enabled = false;
@@ -247,7 +223,7 @@ namespace LeagueBackgrounds
             DestinationFolder_Button.Enabled = false;
             DestinationFolder_TextBox.Enabled = false;
             Output_ProgressBar.Value = 0;
-            Output_TextBox.Text = string.Empty;
+            Output_TextBox.Clear();
             UseWaitCursor = true;
         }
 
@@ -258,9 +234,7 @@ namespace LeagueBackgrounds
         }
         private void WorkerRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            //Export_Button.Enabled = true;
             Export_Button.Visible = true;
-            //Cancel_Button.Enabled = false;
             Cancel_Button.Visible = false;
             Options_Button.Enabled = true;
             DestinationFolder_Button.Enabled = true;
@@ -290,7 +264,7 @@ namespace LeagueBackgrounds
 
         private void WorkerProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            if (_copyWorker.CancellationPending) return;
+            if ((_copyWorker.CancellationPending && _copyWorker.IsBusy) || (_checkWorker.CancellationPending && _checkWorker.IsBusy)) return;
             Output_ProgressBar.Value = e.ProgressPercentage;
             Text = @"[" + ((decimal)e.ProgressPercentage / Output_ProgressBar.Maximum).ToString("P") + @"] League of Legends Backgrounds Exporter";
             if (e.UserState != null) Output_TextBox.AppendText((string)e.UserState);
@@ -319,7 +293,7 @@ namespace LeagueBackgrounds
                         try
                         {
                             File.Copy(sourcePath + champ, Properties.Settings.Default.DestinationFolder + "\\" + champ, true);
-                            _copyWorker.ReportProgress(count++, "File copied from " + sourcePath + champ + " to " + Properties.Settings.Default.DestinationFolder + "\\" + champ + " successfully!" + Environment.NewLine);
+                            _copyWorker.ReportProgress(count++/*, "File copied from " + sourcePath + champ + " to " + Properties.Settings.Default.DestinationFolder + "\\" + champ + " successfully!" + Environment.NewLine*/);
                         }
                         catch
                         {

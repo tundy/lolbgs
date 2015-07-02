@@ -7,3 +7,4 @@ D:\GitHub\lolbgs\LeagueBackgrounds\obj\Debug\LeagueBackgrounds.Properties.Resour
 D:\GitHub\lolbgs\LeagueBackgrounds\obj\Debug\LeagueBackgrounds.csproj.GenerateResource.Cache
 D:\GitHub\lolbgs\LeagueBackgrounds\obj\Debug\LeagueBackgrounds.exe
 D:\GitHub\lolbgs\LeagueBackgrounds\obj\Debug\LeagueBackgrounds.pdb
+D:\GitHub\lolbgs\LeagueBackgrounds\obj\Debug\LeagueBackgrounds.csprojResolveAssemblyReference.cache

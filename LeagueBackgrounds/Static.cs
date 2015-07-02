@@ -62,7 +62,8 @@ namespace LeagueBackgrounds
                 }
             return false;
         }
-        static internal bool CompareSplash(Bitmap imageA, Bitmap imageB)
+
+        /*static internal bool CompareSplash(Bitmap imageA, Bitmap imageB)
         {
             if (imageA.Size != imageB.Size) return false;
             for (var x = 1; x < imageA.Width; x += 200)
@@ -74,6 +75,12 @@ namespace LeagueBackgrounds
         static internal bool CompareSplash(List<Color> imageA, List<Color> imageB)
         {
             if (imageA.Count != imageB.Count) return false;
+            return !imageA.Where((t, i) => t != imageB[i]).Any();
+        }*/
+
+        static internal bool CompareSplash(Color[] imageA, Color[] imageB)
+        {
+            if (imageA.GetLength(0) != imageB.GetLength(0)) return false;
             return !imageA.Where((t, i) => t != imageB[i]).Any();
         }
 
