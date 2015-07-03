@@ -119,7 +119,8 @@ namespace LeagueBackgrounds
                 {
                     if (_checkWorker.CancellationPending) return;
                     var champ2 = bitmap;
-                    if (champ2.Item1.StartsWith(champ1.Item1.Split('_')[0])) continue;
+                    // Just fuck you riot ... Addding duplicates to same champion ...
+                    //if (champ2.Item1.StartsWith(champ1.Item1.Split('_')[0])) continue;
                     if (!Static.CompareSplash(champ1.Item2, champ2.Item2)) continue;
                     duplicates.Add(champ2.Item1);
                     _checkWorker.ReportProgress(count, champ1.Item1 + "\t is duplicate of\t " + champ2.Item1 + Environment.NewLine);
