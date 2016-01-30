@@ -10,9 +10,9 @@ namespace LeagueBackgrounds
 {
     static internal class Static
     {
-        static internal List<String> GetIgnoreList()
+        static internal List<string> GetIgnoreList()
         {
-            var result = new List<String>();
+            var result = new List<string>();
             var settings = Properties.Settings.Default.IgnoreList;
             if (string.IsNullOrEmpty(settings)) return result;
             settings = settings.Replace("\r\n", "\n");
@@ -21,9 +21,9 @@ namespace LeagueBackgrounds
             return result;
         }
 
-        static internal List<String> GetChampsList()
+        static internal List<string> GetChampsList()
         {
-            var result = new List<String>();
+            var result = new List<string>();
             var settings = Properties.Settings.Default.Champs;
             if (string.IsNullOrEmpty(settings)) return result;
             settings = settings.Replace("\r\n", "\n");
@@ -55,11 +55,13 @@ namespace LeagueBackgrounds
             if (splash.Size != new Size(1215, 717)) return false;
             var color = Color.FromArgb(125, 125, 125);
             for (var x = 0; x < 32; ++x)
+            {
                 for (var y = 0; y < 32; ++y)
                 {
                     if (splash.GetPixel(x, y) == color) continue;
                     return true;
                 }
+            }
             return false;
         }
 
@@ -89,7 +91,7 @@ namespace LeagueBackgrounds
 
         public static bool IsActive(IntPtr handle)
         {
-            IntPtr activeHandle = GetForegroundWindow();
+            var activeHandle = GetForegroundWindow();
             return (activeHandle == handle);
         }
 

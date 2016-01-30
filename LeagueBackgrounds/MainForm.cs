@@ -6,6 +6,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace LeagueBackgrounds
 {
@@ -44,7 +45,6 @@ namespace LeagueBackgrounds
             TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
             TaskbarProgress.SetValue(Handle, 0, 1);
 
-            // Docasne
             Options_Button.Click += Options_Button_Click;
         }
 
@@ -61,20 +61,19 @@ namespace LeagueBackgrounds
 
             Enabled = true;
             DisableMainForm();
+
+            Properties.Settings.Default.DestinationFolder = DestinationFolder_TextBox.Text;
+            Properties.Settings.Default.Save();
+            //_checkWorker.RunWorkerAsync();
             try
             {
-                var images = Directory.GetFiles(DestinationFolder_TextBox.Text.TrimEnd('\\'), "*.jpg");
+                var images = Directory.GetFiles(Properties.Settings.Default.DestinationFolder.TrimEnd('\\'), "*.jpg");
                 const string pattern = ".+_[Ss]plash_[2-9]+\\.jpg";
 
-                var splashArts = new List<string>();
-                foreach (var image in images)
-                {
-// ReSharper disable once AssignNullToNotNullAttribute
-                    var match = Regex.Match(Path.GetFileName(image), pattern);
-                    if (match.Success) splashArts.Add(match.Value);
-                }
+                var splashArts = (from image in images select Regex.Match(Path.GetFileName(image)?? string.Empty, pattern) into match where match.Success select match.Value).ToList();
                 Output_ProgressBar.Maximum = splashArts.Count*2;
                 _checkWorker.RunWorkerAsync(splashArts);
+                //_checkWorker.RunWorkerAsync(GetSplashArts(DestinationFolder_TextBox.Text));
             }
             catch (Exception)
             {
@@ -83,63 +82,92 @@ namespace LeagueBackgrounds
             }
         }
 
+        /*IEnumerable<string> GetSplashArts(string RadPath)
+        {
+            const string pattern = ".+_[Ss]plash_[2-9]+\\.jpg";
+            /*foreach(var image in Directory.GetFiles(RadPath.TrimEnd('\\'), "*.jpg"))
+            {
+                var match = Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern);
+                if(match.Success)
+                {
+                    yield return match.Value;
+                }
+            }*
+            return (from image in Directory.GetFiles(RadPath.TrimEnd('\\'), "*.jpg")
+                    select Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern) into match where match.Success select match.Value);
+        }*/
+
         private void CheckWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            if (e.Argument == null) return;
-            _checkWorker.ReportProgress(0);
             var splashArts = e.Argument as List<string>;
             if (splashArts == null) return;
+
+            _checkWorker.ReportProgress(0);
             var count = 0;
             var destinationPath = Properties.Settings.Default.DestinationFolder.TrimEnd('\\') + "\\";
             var duplicates = new List<string>();
 
             var tempList = new List<Tuple<string, Color[]>>();
-            foreach (var art in splashArts)
+            Parallel.ForEach(splashArts, art =>
             {
                 if (_checkWorker.CancellationPending) return;
                 _checkWorker.ReportProgress(count++);
                 var bmp = new Bitmap(destinationPath + art);
-                var temp = new Color[(1 + bmp.Width/50)*(1 + bmp.Height/50)];
+                var temp = new Color[(1 + bmp.Width / 50) * (1 + bmp.Height / 50)];
                 var i = 0;
                 for (var x = 0; x < bmp.Width; x += 50)
+                {
                     for (var y = 0; y < bmp.Height; y += 50)
+                    {
                         temp[i++] = bmp.GetPixel(x, y);
-                tempList.Add(new Tuple<string, Color[]>(art, temp));
+                    }
+                }
+                lock (tempList)
+                {
+                    tempList.Add(new Tuple<string, Color[]>(art, temp));
+                }
                 bmp.Dispose();
             }
+            );
 
             _checkWorker.ReportProgress(count);
             while (tempList.Count > 0)
             {
                 if (_checkWorker.CancellationPending) return;
                 _checkWorker.ReportProgress(count++);
-                var champ1 = tempList.First();
-                tempList.Remove(champ1);
-                foreach (var bitmap in tempList)
+                var champ = tempList.First();
+                tempList.Remove(champ);
+                Parallel.ForEach(tempList, bitmap =>
                 {
                     if (_checkWorker.CancellationPending) return;
-                    var champ2 = bitmap;
-                    // Just fuck you riot ... Addding duplicates to same champion ...
-                    //if (champ2.Item1.StartsWith(champ1.Item1.Split('_')[0])) continue;
-                    if (!Static.CompareSplash(champ1.Item2, champ2.Item2)) continue;
-                    duplicates.Add(champ2.Item1);
-                    _checkWorker.ReportProgress(count, champ1.Item1 + "\t is duplicate of\t " + champ2.Item1 + Environment.NewLine);
+                    lock(champ)
+                    {
+                        // Just fuck you riot ... Addding duplicates to same champion ...
+                        //if (bitmap.Item1.StartsWith(champ1.Item1.Split('_')[0])) continue;
+                        if (!Static.CompareSplash(champ.Item2, bitmap.Item2)) return;
+                        lock (duplicates)
+                        {
+                            duplicates.Add(bitmap.Item1);
+                            _checkWorker.ReportProgress(count, champ.Item1 + "\t is duplicate of\t " + bitmap.Item1 + Environment.NewLine);
+                        }
+                    }
                 }
+                );
             }
 
             var tmp = Static.GetIgnoreList();
-            foreach (var duplicate in duplicates)
+            Parallel.ForEach(duplicates, duplicate =>
             {
                 if (_checkWorker.CancellationPending) return;
                 File.Delete(destinationPath + duplicate);
-                if (!tmp.Contains(duplicate))
-                    tmp.Add(duplicate);
-            }
+                lock(tmp)
+                {
+                    if (!tmp.Contains(duplicate))
+                        tmp.Add(duplicate);
+                }
+            });
 
-            var ignore = string.Empty;
-            foreach (var r in tmp)
-                if (!string.IsNullOrEmpty(r))
-                    ignore += r + "\r\n";
+            var ignore = tmp.Where(r => !string.IsNullOrWhiteSpace(r)).Aggregate(string.Empty, (current, r) => current + (r + "\r\n"));
             ignore = ignore.Trim();
             if (ignore.Length == 0) ignore = null;
             Properties.Settings.Default.IgnoreList = ignore;
@@ -196,13 +224,7 @@ namespace LeagueBackgrounds
                 var images = Directory.GetFiles(Static.GetRadPath(), "*.jpg");
                 const string pattern = ".+_[Ss]plash_[0-9]+\\.jpg";
 
-                var splashArts = new List<string>();
-                foreach (var image in images)
-                {
-// ReSharper disable once AssignNullToNotNullAttribute
-                    var match = Regex.Match(Path.GetFileName(image), pattern);
-                    if (match.Success) splashArts.Add(match.Value);
-                }
+                var splashArts = (from image in images select Regex.Match(Path.GetFileName(image)?? string.Empty, pattern) into match where match.Success select match.Value).ToList();
                 Output_ProgressBar.Maximum = splashArts.Count;
                 _copyWorker.RunWorkerAsync(splashArts);
 
@@ -266,6 +288,10 @@ namespace LeagueBackgrounds
         private void WorkerProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             if ((_copyWorker.CancellationPending && _copyWorker.IsBusy) || (_checkWorker.CancellationPending && _checkWorker.IsBusy)) return;
+            if(e.ProgressPercentage > Output_ProgressBar.Maximum)
+            {
+                Output_ProgressBar.Maximum = (int)((Output_ProgressBar.Maximum+1)*1.5);
+            }
             Output_ProgressBar.Value = e.ProgressPercentage;
             Text = @"[" + ((decimal)e.ProgressPercentage / Output_ProgressBar.Maximum).ToString("P") + @"] League of Legends Backgrounds Exporter";
             if (e.UserState != null) Output_TextBox.AppendText((string)e.UserState);
@@ -275,9 +301,9 @@ namespace LeagueBackgrounds
 
         private void CopyWorkerDoWork(object sender, DoWorkEventArgs e)
         {
-            if (e.Argument == null) return;
-            _copyWorker.ReportProgress(0);
             var splashArts = e.Argument as List<string>;
+            if (splashArts == null) return;
+            _copyWorker.ReportProgress(0);
             var count = 1;
             Directory.CreateDirectory(Properties.Settings.Default.DestinationFolder + "\\");
             var sourcePath = Static.GetRadPath();
@@ -286,24 +312,38 @@ namespace LeagueBackgrounds
 // ReSharper disable once PossibleNullReferenceException
             foreach (var champ in splashArts)
             {
-                if (_copyWorker.CancellationPending) return;
+                if (_copyWorker.CancellationPending) {return;}
                 var match = Regex.Match(champ, pattern);
-                if (match.Success) temp = match.Groups[1].Value;
-                if (!Static.GetIgnoreList().Contains(champ, StringComparer.OrdinalIgnoreCase) && !Static.GetChampsList().Contains(temp, StringComparer.OrdinalIgnoreCase))
+                if (match.Success) {temp = match.Groups[1].Value;}
+                if (!Static.GetIgnoreList().Contains(champ, StringComparer.OrdinalIgnoreCase) &&
+                    !Static.GetChampsList().Contains(temp, StringComparer.OrdinalIgnoreCase))
+                {
                     if (Static.IsEmptySplash(new Bitmap(sourcePath + champ)))
+                    {
                         try
                         {
-                            File.Copy(sourcePath + champ, Properties.Settings.Default.DestinationFolder + "\\" + champ, true);
-                            _copyWorker.ReportProgress(count++/*, "File copied from " + sourcePath + champ + " to " + Properties.Settings.Default.DestinationFolder + "\\" + champ + " successfully!" + Environment.NewLine*/);
+                            File.Copy(sourcePath + champ, Properties.Settings.Default.DestinationFolder + "\\" + champ,
+                                true);
+                            _copyWorker.ReportProgress(count++
+                                /*, "File copied from " + sourcePath + champ + " to " + Properties.Settings.Default.DestinationFolder + "\\" + champ + " successfully!" + Environment.NewLine*/);
                         }
                         catch
                         {
-                            _copyWorker.ReportProgress(count++, "Failed to copy from " + sourcePath + champ + " to " + Properties.Settings.Default.DestinationFolder + "\\" + champ + " !" + Environment.NewLine);
+                            _copyWorker.ReportProgress(count++,
+                                "Failed to copy from " + sourcePath + champ + " to " +
+                                Properties.Settings.Default.DestinationFolder + "\\" + champ + " !" +
+                                Environment.NewLine);
                         }
+                    }
                     else
+                    {
                         _copyWorker.ReportProgress(count++, "Ignoring (not finished) " + champ + Environment.NewLine);
+                    }
+                }
                 else
+                {
                     _copyWorker.ReportProgress(count++, "Ignoring " + champ + Environment.NewLine);
+                }
             }
         }
 

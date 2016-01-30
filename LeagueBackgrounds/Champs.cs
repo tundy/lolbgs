@@ -37,23 +37,19 @@ namespace LeagueBackgrounds
 
             var temp = Static.GetChampsList();
 
-            foreach (var image in images)
+            foreach (var match in images.Select(image => Regex.Match(Path.GetFileName(image)?? string.Empty, pattern)).Where(match => match.Success).Where(match => File.Exists(source + "\\" + match.Groups[1].Value + "_0.jpg")))
             {
-                // ReSharper disable once AssignNullToNotNullAttribute
-                var match = Regex.Match(Path.GetFileName(image), pattern);
-                if (!match.Success) continue;
-                    if (File.Exists(source + "\\" + match.Groups[1].Value + "_0.jpg"))
-                        ChampsPanel.Controls.Add(new Picture
-                        {
-                            Width = 96,
-                            Height = 96,
-                            SizeMode = PictureBoxSizeMode.StretchImage,
-                            Name = match.Groups[1].Value,
-                            Margin = new Padding(8),
-                            BorderStyle = BorderStyle.Fixed3D,
-                            Cursor = Cursors.Hand,
-                            Image = temp.Contains(match.Groups[1].Value) ? MakeGrayscale(new Bitmap(source + match.Value)) : Image.FromFile(source + match.Value)
-                        });
+                ChampsPanel.Controls.Add(new Picture
+                {
+                    Width = 96,
+                    Height = 96,
+                    SizeMode = PictureBoxSizeMode.StretchImage,
+                    Name = match.Groups[1].Value,
+                    Margin = new Padding(8),
+                    BorderStyle = BorderStyle.Fixed3D,
+                    Cursor = Cursors.Hand,
+                    Image = temp.Contains(match.Groups[1].Value) ? MakeGrayscale(new Bitmap(source + match.Value)) : Image.FromFile(source + match.Value)
+                });
             }
         }
 
@@ -86,12 +82,7 @@ namespace LeagueBackgrounds
                 img.Image = MakeGrayscale(new Bitmap(img.Image));
             }
 
-            var ignore = string.Empty;
-            foreach (var r in temp)
-            {
-                if (!string.IsNullOrEmpty(r))
-                    ignore += r + "\r\n";
-            }
+            var ignore = temp.Where(r => !string.IsNullOrEmpty(r)).Aggregate(string.Empty, (current, r) => current + (r + "\r\n"));
             ignore = ignore.Trim();
             if (ignore.Length == 0)
                 ignore = null;
@@ -126,12 +117,7 @@ namespace LeagueBackgrounds
                 temp.Add(control.Name);
                 control.PictureBox.Image = MakeGrayscale(new Bitmap(control.PictureBox.Image));
             }
-            var ignore = string.Empty;
-            foreach (var r in temp)
-            {
-                if (!string.IsNullOrEmpty(r))
-                    ignore += r + "\r\n";
-            }
+            var ignore = temp.Where(r => !string.IsNullOrEmpty(r)).Aggregate(string.Empty, (current, r) => current + (r + "\r\n"));
             ignore = ignore.Trim();
             if (ignore.Length == 0)
                 ignore = null;
@@ -162,12 +148,7 @@ namespace LeagueBackgrounds
                 }
 
             }
-            var ignore = string.Empty;
-            foreach (var r in temp)
-            {
-                if (!string.IsNullOrEmpty(r))
-                    ignore += r + "\r\n";
-            }
+            var ignore = temp.Where(r => !string.IsNullOrEmpty(r)).Aggregate(string.Empty, (current, r) => current + (r + "\r\n"));
             ignore = ignore.Trim();
             if (ignore.Length == 0)
                 ignore = null;
