@@ -309,12 +309,12 @@ namespace LeagueBackgrounds
             var sourcePath = Static.GetRadPath();
             const string pattern = "(.+)_[Ss]plash_[0-9]+\\.jpg";
             var temp = string.Empty;
-// ReSharper disable once PossibleNullReferenceException
-            foreach (var champ in splashArts)
+            // ReSharper disable once PossibleNullReferenceException
+            Parallel.ForEach(splashArts, champ =>
             {
-                if (_copyWorker.CancellationPending) {return;}
+                if (_copyWorker.CancellationPending) { return; }
                 var match = Regex.Match(champ, pattern);
-                if (match.Success) {temp = match.Groups[1].Value;}
+                if (match.Success) { temp = match.Groups[1].Value; }
                 if (!Static.GetIgnoreList().Contains(champ, StringComparer.OrdinalIgnoreCase) &&
                     !Static.GetChampsList().Contains(temp, StringComparer.OrdinalIgnoreCase))
                 {
@@ -344,7 +344,7 @@ namespace LeagueBackgrounds
                 {
                     _copyWorker.ReportProgress(count++, "Ignoring " + champ + Environment.NewLine);
                 }
-            }
+            });
         }
 
         private void Cancel_Button_Click(object sender, EventArgs e)
