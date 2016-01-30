@@ -14,14 +14,15 @@ namespace LeagueBackgrounds
         public Champs()
         {
             InitializeComponent();
-            Shown += Champs_Shown;
             Load += Champs_Load;
+            Shown += Champs_Shown;
         }
 
         void Champs_Load(object sender, EventArgs e)
         {
             Text += @"      [LOADING...]";
             Cursor.Current = Cursors.WaitCursor;
+            ChampsPanel.SuspendLayout();
             string source;
             try
             {
@@ -51,6 +52,7 @@ namespace LeagueBackgrounds
                     Image = temp.Contains(match.Groups[1].Value) ? MakeGrayscale(new Bitmap(source + match.Value)) : Image.FromFile(source + match.Value)
                 });
             }
+            ChampsPanel.ResumeLayout();
         }
 
         void Champs_Shown(object sender, EventArgs e)
@@ -109,7 +111,7 @@ namespace LeagueBackgrounds
         private void None_Click(object sender, EventArgs e)
         {
             Cursor.Current = Cursors.WaitCursor;
-            var temp = new List<String>();
+            var temp = new List<string>();
             foreach (var control in ChampsPanel.Controls.OfType<Picture>())
             {
                 if (control.Name == "Corki")
@@ -162,11 +164,21 @@ namespace LeagueBackgrounds
             //SuspendLayout();
             ChampsPanel.SuspendLayout();
             if (string.IsNullOrEmpty(Search.Text))
+            {
                 foreach (var img in ChampsPanel.Controls.OfType<Picture>())
+                {
                     img.Visible = true;
+                }
+            }
             else
-                foreach (var img in ChampsPanel.Controls.OfType<Picture>().Reverse())   // Revesre is faster 'cos it don't need to redraw so often
-                    img.Visible = img.Name.IndexOf(Regex.Replace(Search.Text, @"[']+", ""), StringComparison.CurrentCultureIgnoreCase) != -1;   // Ignore Apostrophe
+            {
+                // Revesre is faster 'cos it don't need to redraw so often
+                foreach (var img in ChampsPanel.Controls.OfType<Picture>().Reverse())
+                {
+                    // Ignore Apostrophe
+                    img.Visible = img.Name.IndexOf(Regex.Replace(Search.Text, @"[']+", ""), StringComparison.CurrentCultureIgnoreCase) != -1;
+                }
+            }
             ChampsPanel.ResumeLayout();
             //ResumeLayout();
         }

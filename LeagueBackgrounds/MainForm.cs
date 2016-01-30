@@ -156,16 +156,14 @@ namespace LeagueBackgrounds
             }
 
             var tmp = Static.GetIgnoreList();
-            Parallel.ForEach(duplicates, duplicate =>
+            //Parallel.ForEach(duplicates, duplicate =>
+            foreach(var duplicate in duplicates)
             {
                 if (_checkWorker.CancellationPending) return;
                 File.Delete(destinationPath + duplicate);
-                lock(tmp)
-                {
                     if (!tmp.Contains(duplicate))
                         tmp.Add(duplicate);
-                }
-            });
+            }
 
             var ignore = tmp.Where(r => !string.IsNullOrWhiteSpace(r)).Aggregate(string.Empty, (current, r) => current + (r + "\r\n"));
             ignore = ignore.Trim();
@@ -227,7 +225,6 @@ namespace LeagueBackgrounds
                 var splashArts = (from image in images select Regex.Match(Path.GetFileName(image)?? string.Empty, pattern) into match where match.Success select match.Value).ToList();
                 Output_ProgressBar.Maximum = splashArts.Count;
                 _copyWorker.RunWorkerAsync(splashArts);
-
             }
             catch (DirectoryNotFoundException)
             {
