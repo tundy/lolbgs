@@ -280,6 +280,7 @@ namespace LeagueBackgrounds
             {
                 //do(nothing);
             }
+            GC.Collect();
         }
 
         private void WorkerProgressChanged(object sender, ProgressChangedEventArgs e)
