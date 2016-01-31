@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace LeagueBackgrounds
@@ -17,11 +19,34 @@ namespace LeagueBackgrounds
             Load += Champs_Load;
             Shown += Champs_Shown;
         }
+        
+/*
+        private static void AddUserControl(Control control, UserControl userControl)
+        {
+            if (control == null) throw new ArgumentNullException(nameof(control));
+            if (userControl == null) throw new ArgumentNullException(nameof(userControl));
+            if (control.InvokeRequired)
+            {
+                control.Invoke(new UserControlDelegate(AddUserControl), control, userControl);
+                //control.Invoke(new Action(() => { control.Controls.Add(userControl); }));
+            }
+            else
+            {
+                control.Controls.Add(userControl);
+            }
+        }
+*/
 
-        void Champs_Load(object sender, EventArgs e)
+/*
+        private delegate void UserControlDelegate(Control parentControl, UserControl userControl);
+*/
+        private delegate void EditPictureDelegate(Control parentControl, Picture userControl, List<string> temp, string source);
+
+        private void Champs_Load(object sender, EventArgs e)
         {
             Text += @"      [LOADING...]";
             Cursor.Current = Cursors.WaitCursor;
+            //SuspendLayout();
             ChampsPanel.SuspendLayout();
             string source;
             try
@@ -36,11 +61,18 @@ namespace LeagueBackgrounds
             var images = Directory.GetFiles(source, "*.png");
             const string pattern = "(.+)_[Ss]quare_0\\.png";
 
+            var list =
+                images.Select(image => Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern))
+                    .Where(match => match.Success)
+                    .Where(match => File.Exists(source + "\\" + match.Groups[1].Value + "_0.jpg"))/*.ToList()*/;
             var temp = Static.GetChampsList();
-
-            foreach (var match in images.Select(image => Regex.Match(Path.GetFileName(image)?? string.Empty, pattern)).Where(match => match.Success).Where(match => File.Exists(source + "\\" + match.Groups[1].Value + "_0.jpg")))
-            {
-                ChampsPanel.Controls.Add(new Picture
+            //var sl = new SortedList<string, Picture>();
+            //Parallel.For(0, list.Count, i =>
+            //Parallel.ForEach(list, match =>
+            //{
+                //var match = list[i];
+                //var pic = new Picture
+            foreach (var pic in list.Select(match => new Picture
                 {
                     Width = 96,
                     Height = 96,
@@ -49,22 +81,68 @@ namespace LeagueBackgrounds
                     Margin = new Padding(8),
                     BorderStyle = BorderStyle.Fixed3D,
                     Cursor = Cursors.Hand,
-                    Image = temp.Contains(match.Groups[1].Value) ? MakeGrayscale(new Bitmap(source + match.Value)) : Image.FromFile(source + match.Value)
-                });
+                    Tag = match.Value
+                }))
+            {
+                ChampsPanel.Controls.Add(pic);
+                //sl.Add(match.Groups[1].Value, pic);
+                //*var x =*/ ChampsPanel.BeginInvoke(new UserControlDelegate(AddUserControl), ChampsPanel, pic);
+                //lock (temp)
+                //{
+                //    pic.Image = temp.Contains(pic.Name) ? MakeGrayscale(new Bitmap(source + pic.Tag)) : Image.FromFile(source + pic.Tag);
+                //}
+                //ChampsPanel.EndInvoke(x);
             }
+
+            foreach (Picture pic in ChampsPanel.Controls)
+            {
+                ChampsPanel.BeginInvoke(new EditPictureDelegate(EditPicture), ChampsPanel, pic, temp, source);
+            }
+
+            /*foreach (var pair in sl)
+            {
+                //ChampsPanel.BeginInvoke(new AddUserControlDelegate(AddUserControl), ChampsPanel, pair.Value);
+                ChampsPanel.Controls.Add(pair.Value);
+            }*/
+
             ChampsPanel.ResumeLayout();
+            //ResumeLayout();
         }
 
-        void Champs_Shown(object sender, EventArgs e)
+        private void EditPicture(Control parentcontrol, Picture picture, List<string> temp, string source)
+        {
+            if (parentcontrol == null) throw new ArgumentNullException(nameof(parentcontrol));
+            if (picture == null) throw new ArgumentNullException(nameof(picture));
+            if (parentcontrol.InvokeRequired)
+            {
+                parentcontrol.Invoke(new EditPictureDelegate(EditPicture), parentcontrol, picture, temp, source);
+                //parentcontrol.Invoke(new Action(() => { control.Controls.Add(userControl); }));
+            }
+            else
+            {
+                /*picture.Width = 96;
+                picture.Height = 96;
+                picture.SizeMode = PictureBoxSizeMode.StretchImage;
+                picture.Margin = new Padding(8);
+                picture.BorderStyle = BorderStyle.Fixed3D;
+                picture.Cursor = Cursors.Hand;*/
+                picture.Image = temp.Contains(picture.Name)
+                                ? MakeGrayscale(new Bitmap(source + picture.Tag))
+                                : Image.FromFile(source + picture.Tag);
+            }
+        }
+
+        private void Champs_Shown(object sender, EventArgs e)
         {
             foreach (var control in ChampsPanel.Controls.OfType<Picture>())
                 control.PictureBox.Click += img_Click;
             if (Text.EndsWith("      [LOADING...]"))
                 Text = Text.Substring(0, Text.LastIndexOf("      [LOADING...]", StringComparison.Ordinal));
             Cursor.Current = Cursors.Default;
+            GC.Collect();
         }
 
-        static void img_Click(object sender, EventArgs e)
+        private static void img_Click(object sender, EventArgs e)
         {
             var temp = Static.GetChampsList();
             var img = sender as PictureBox;

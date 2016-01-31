@@ -8,9 +8,9 @@ using Microsoft.Win32;
 
 namespace LeagueBackgrounds
 {
-    static internal class Static
+    internal static class Static
     {
-        static internal List<string> GetIgnoreList()
+        internal static List<string> GetIgnoreList()
         {
             var result = new List<string>();
             var settings = Properties.Settings.Default.IgnoreList;
@@ -21,7 +21,7 @@ namespace LeagueBackgrounds
             return result;
         }
 
-        static internal List<string> GetChampsList()
+        internal static List<string> GetChampsList()
         {
             var result = new List<string>();
             var settings = Properties.Settings.Default.Champs;
@@ -32,7 +32,7 @@ namespace LeagueBackgrounds
             return result;
         }
 
-        static internal string FindLeagueOfLegends()
+        internal static string FindLeagueOfLegends()
         {
             var temp = (string)Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null)
                     ?? (string)Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Classes\VirtualStore\MACHINE\SOFTWARE\Wow6432Node\RIOT GAMES\RADS", "LOCALROOTFOLDER", null)
@@ -43,14 +43,14 @@ namespace LeagueBackgrounds
             return temp != null ? Directory.GetParent(temp).ToString() : @"C:\Riot Games\League of Legends";
         }
         
-        static internal string GetRadPath()
+        internal static string GetRadPath()
         {
             var source = Properties.Settings.Default.LeagueFolder + "\\RADS\\projects\\lol_air_client\\releases\\";
             var directories = Directory.GetDirectories(source);
             return directories[0] != null ? directories[0] + "\\deploy\\assets\\images\\champions\\" : null;
         }
 
-        static internal bool IsEmptySplash(Bitmap splash)
+        internal static bool IsEmptySplash(Bitmap splash)
         {
             if (splash.Size != new Size(1215, 717)) return false;
             var color = Color.FromArgb(125, 125, 125);
@@ -59,10 +59,10 @@ namespace LeagueBackgrounds
                 for (var y = 0; y < 32; ++y)
                 {
                     if (splash.GetPixel(x, y) == color) continue;
-                    return true;
+                    return false;
                 }
             }
-            return false;
+            return true;
         }
 
         /*static internal bool CompareSplash(Bitmap imageA, Bitmap imageB)
@@ -80,7 +80,7 @@ namespace LeagueBackgrounds
             return !imageA.Where((t, i) => t != imageB[i]).Any();
         }*/
 
-        static internal bool CompareSplash(Color[] imageA, Color[] imageB)
+        internal static bool CompareSplash(Color[] imageA, Color[] imageB)
         {
             if (imageA.GetLength(0) != imageB.GetLength(0)) return false;
             return !imageA.Where((t, i) => t != imageB[i]).Any();

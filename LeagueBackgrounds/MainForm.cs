@@ -48,7 +48,7 @@ namespace LeagueBackgrounds
             Options_Button.Click += Options_Button_Click;
         }
 
-        void Options_Button_Click(object sender, EventArgs e)
+        private void Options_Button_Click(object sender, EventArgs e)
         {
             Enabled = false;
             var opt = new Options();
@@ -72,7 +72,10 @@ namespace LeagueBackgrounds
 
                 var splashArts = (from image in images select Regex.Match(Path.GetFileName(image)?? string.Empty, pattern) into match where match.Success select match.Value).ToList();
                 Output_ProgressBar.Maximum = splashArts.Count*2;
-                _checkWorker.RunWorkerAsync(splashArts);
+                lock (_checkWorker)
+                {
+                    _checkWorker.RunWorkerAsync(splashArts);
+                }
                 //_checkWorker.RunWorkerAsync(GetSplashArts(DestinationFolder_TextBox.Text));
             }
             catch (Exception)
@@ -105,12 +108,12 @@ namespace LeagueBackgrounds
             _checkWorker.ReportProgress(0);
             var count = 0;
             var destinationPath = Properties.Settings.Default.DestinationFolder.TrimEnd('\\') + "\\";
-            var duplicates = new List<string>();
 
             var tempList = new List<Tuple<string, Color[]>>();
             Parallel.ForEach(splashArts, art =>
             {
                 if (_checkWorker.CancellationPending) return;
+                // ReSharper disable once AccessToModifiedClosure
                 _checkWorker.ReportProgress(count++);
                 var bmp = new Bitmap(destinationPath + art);
                 var temp = new Color[(1 + bmp.Width / 50) * (1 + bmp.Height / 50)];
@@ -127,10 +130,10 @@ namespace LeagueBackgrounds
                     tempList.Add(new Tuple<string, Color[]>(art, temp));
                 }
                 bmp.Dispose();
-            }
-            );
+            });
 
             _checkWorker.ReportProgress(count);
+            var duplicates = new List<string>();
             while (tempList.Count > 0)
             {
                 if (_checkWorker.CancellationPending) return;
@@ -140,7 +143,7 @@ namespace LeagueBackgrounds
                 Parallel.ForEach(tempList, bitmap =>
                 {
                     if (_checkWorker.CancellationPending) return;
-                    lock(champ)
+                    lock (champ)
                     {
                         // Just fuck you riot ... Addding duplicates to same champion ...
                         //if (bitmap.Item1.StartsWith(champ1.Item1.Split('_')[0])) continue;
@@ -148,11 +151,11 @@ namespace LeagueBackgrounds
                         lock (duplicates)
                         {
                             duplicates.Add(bitmap.Item1);
-                            _checkWorker.ReportProgress(count, champ.Item1 + "\t is duplicate of\t " + bitmap.Item1 + Environment.NewLine);
+                            _checkWorker.ReportProgress(count,
+                                champ.Item1 + "\t is duplicate of\t " + bitmap.Item1 + Environment.NewLine);
                         }
                     }
-                }
-                );
+                });
             }
 
             var tmp = Static.GetIgnoreList();
@@ -316,7 +319,7 @@ namespace LeagueBackgrounds
                 if (!Static.GetIgnoreList().Contains(champ, StringComparer.OrdinalIgnoreCase) &&
                     !Static.GetChampsList().Contains(temp, StringComparer.OrdinalIgnoreCase))
                 {
-                    if (Static.IsEmptySplash(new Bitmap(sourcePath + champ)))
+                    if (!Static.IsEmptySplash(new Bitmap(sourcePath + champ)))
                     {
                         try
                         {
