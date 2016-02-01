@@ -97,6 +97,7 @@ namespace LeagueBackgrounds
 
             foreach (var task in taskList)
             {
+                task.Wait();
                 ChampsPanel.Controls.Add(task.Result);
                 //ChampsPanel.BeginInvoke(new EditPictureDelegate(EditPicture), ChampsPanel, task.Result, temp, source);
             }
