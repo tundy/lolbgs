@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -37,10 +36,8 @@ namespace LeagueBackgrounds
         }
 */
 
-/*
-        private delegate void UserControlDelegate(Control parentControl, UserControl userControl);
-*/
-        private delegate void EditPictureDelegate(Control parentControl, Picture userControl, List<string> temp, string source);
+        //private delegate void UserControlDelegate(Control parentControl, UserControl userControl);
+        //private delegate void EditPictureDelegate(Control parentControl, Picture userControl, List<string> temp, string source);
 
         private void Champs_Load(object sender, EventArgs e)
         {
@@ -61,10 +58,9 @@ namespace LeagueBackgrounds
             var images = Directory.GetFiles(source, "*.png");
             const string pattern = "(.+)_[Ss]quare_0\\.png";
 
-            var list =
-                images.Select(image => Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern))
-                    .Where(match => match.Success)
-                    .Where(match => File.Exists(source + "\\" + match.Groups[1].Value + "_0.jpg"))/*.ToList()*/;
+            var list = images.Select(image => Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern))
+                       .Where(match => match.Success)
+                       .Where(match => File.Exists(source + "\\" + match.Groups[1].Value + "_0.jpg"))/*.ToList()*/;
             var temp = Static.GetChampsList();
             //var sl = new SortedList<string, Picture>();
             //Parallel.For(0, list.Count, i =>
@@ -72,7 +68,10 @@ namespace LeagueBackgrounds
             //{
                 //var match = list[i];
                 //var pic = new Picture
-            foreach (var pic in list.Select(match => new Picture
+            var taskList = new List<Task<Picture>>();
+            foreach (var task in list.Select(match => new Task<Picture>(() =>
+            {
+                var pic = new Picture
                 {
                     Width = 96,
                     Height = 96,
@@ -82,22 +81,33 @@ namespace LeagueBackgrounds
                     BorderStyle = BorderStyle.Fixed3D,
                     Cursor = Cursors.Hand,
                     Tag = match.Value
-                }))
+                };
+                lock (temp)
+                {
+                    pic.Image = temp.Contains(match.Groups[1].Value)
+                        ? MakeGrayscale(new Bitmap(source + match.Value))
+                        : Image.FromFile(source + match.Value);
+                }
+                return pic;
+            })))
             {
-                ChampsPanel.Controls.Add(pic);
-                //sl.Add(match.Groups[1].Value, pic);
-                //*var x =*/ ChampsPanel.BeginInvoke(new UserControlDelegate(AddUserControl), ChampsPanel, pic);
-                //lock (temp)
-                //{
-                //    pic.Image = temp.Contains(pic.Name) ? MakeGrayscale(new Bitmap(source + pic.Tag)) : Image.FromFile(source + pic.Tag);
-                //}
-                //ChampsPanel.EndInvoke(x);
+                task.Start();
+                taskList.Add(task);
             }
 
-            foreach (Picture pic in ChampsPanel.Controls)
+            foreach (var task in taskList)
             {
-                ChampsPanel.BeginInvoke(new EditPictureDelegate(EditPicture), ChampsPanel, pic, temp, source);
+                ChampsPanel.Controls.Add(task.Result);
+                //ChampsPanel.BeginInvoke(new EditPictureDelegate(EditPicture), ChampsPanel, task.Result, temp, source);
             }
+
+            /*foreach (Picture pic in ChampsPanel.Controls)
+            {
+                pic.Image = temp.Contains(pic.Name)
+                            ? MakeGrayscale(new Bitmap(source + pic.Tag))
+                            : Image.FromFile(source + pic.Tag);
+                //ChampsPanel.BeginInvoke(new EditPictureDelegate(EditPicture), ChampsPanel, pic, temp, source);
+            }*/
 
             /*foreach (var pair in sl)
             {
@@ -107,9 +117,10 @@ namespace LeagueBackgrounds
 
             ChampsPanel.ResumeLayout();
             //ResumeLayout();
+            GC.Collect();
         }
 
-        private void EditPicture(Control parentcontrol, Picture picture, List<string> temp, string source)
+        /*private void EditPicture(Control parentcontrol, Picture picture, List<string> temp, string source)
         {
             if (parentcontrol == null) throw new ArgumentNullException(nameof(parentcontrol));
             if (picture == null) throw new ArgumentNullException(nameof(picture));
@@ -120,17 +131,17 @@ namespace LeagueBackgrounds
             }
             else
             {
-                /*picture.Width = 96;
-                picture.Height = 96;
-                picture.SizeMode = PictureBoxSizeMode.StretchImage;
-                picture.Margin = new Padding(8);
-                picture.BorderStyle = BorderStyle.Fixed3D;
-                picture.Cursor = Cursors.Hand;*/
+                //picture.Width = 96;
+                //picture.Height = 96;
+                //picture.SizeMode = PictureBoxSizeMode.StretchImage;
+                //picture.Margin = new Padding(8);
+                //picture.BorderStyle = BorderStyle.Fixed3D;
+                //picture.Cursor = Cursors.Hand;
                 picture.Image = temp.Contains(picture.Name)
                                 ? MakeGrayscale(new Bitmap(source + picture.Tag))
                                 : Image.FromFile(source + picture.Tag);
             }
-        }
+        }*/
 
         private void Champs_Shown(object sender, EventArgs e)
         {

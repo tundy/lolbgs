@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
 
 namespace LeagueBackgrounds
 {
@@ -29,6 +30,7 @@ namespace LeagueBackgrounds
         private void Allowed_Click(object sender, System.EventArgs e)
         {
             new Champs().ShowDialog();
+            GC.Collect();
         }
 
         private void Duplicates_Click(object sender, System.EventArgs e)
