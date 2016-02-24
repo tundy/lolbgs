@@ -19,7 +19,7 @@ namespace LeagueBackgrounds
             Shown += Champs_Shown;
         }
         
-/*
+        /*
         private static void AddUserControl(Control control, UserControl userControl)
         {
             if (control == null) throw new ArgumentNullException(nameof(control));
@@ -34,7 +34,7 @@ namespace LeagueBackgrounds
                 control.Controls.Add(userControl);
             }
         }
-*/
+        */
 
         //private delegate void UserControlDelegate(Control parentControl, UserControl userControl);
         //private delegate void EditPictureDelegate(Control parentControl, Picture userControl, List<string> temp, string source);

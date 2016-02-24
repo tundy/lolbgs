@@ -54,8 +54,7 @@ namespace LeagueBackgrounds
         #region ButtonClicks
         private void Options_Button_Click(object sender, EventArgs e)
         {
-            if (new Options().ShowDialog() != DialogResult.Retry) return;
-            RunCheckWorker();
+            if (new Options().ShowDialog() == DialogResult.Retry) RunCheckWorker();
         }
 
         private void LeagueFolder_Button_Click(object sender, EventArgs e)
@@ -162,7 +161,7 @@ namespace LeagueBackgrounds
                     select Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern) into match where match.Success select match.Value);
         }*/
 
-        #region BackgroundWorkers
+        #region BackgroundWorkers Methods
         private void WorkerProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             if ((_copyWorker.CancellationPending && _copyWorker.IsBusy) || (_checkWorker.CancellationPending && _checkWorker.IsBusy)) return;
@@ -188,7 +187,6 @@ namespace LeagueBackgrounds
             LeagueFolder_TextBox.Enabled = true;
             Output_ProgressBar.Value = Output_ProgressBar.Maximum;
             Text = @"League of Legends Backgrounds Exporter";
-            UseWaitCursor = false;
             try
             {
                 if (Static.IsActive(Handle))
@@ -206,6 +204,7 @@ namespace LeagueBackgrounds
                 //do(nothing);
             }
             GC.Collect();
+            UseWaitCursor = false;
         }
 
         private void CheckWorker_DoWork(object sender, DoWorkEventArgs e)
@@ -346,6 +345,7 @@ namespace LeagueBackgrounds
 
         private void DisableMainForm()
         {
+            UseWaitCursor = true;
             Cancel_Button.Visible = true;
             Export_Button.Visible = false;
             Options_Button.Enabled = false;
@@ -355,7 +355,6 @@ namespace LeagueBackgrounds
             DestinationFolder_TextBox.Enabled = false;
             Output_ProgressBar.Value = 0;
             Output_TextBox.Clear();
-            UseWaitCursor = true;
         }
 
         private void EnableMainForm()
