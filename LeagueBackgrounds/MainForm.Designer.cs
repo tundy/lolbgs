@@ -115,6 +115,7 @@
             this.Options_Button.TabIndex = 8;
             this.Options_Button.Text = "More Options";
             this.Options_Button.UseVisualStyleBackColor = true;
+            this.Options_Button.Click += new System.EventHandler(this.Options_Button_Click);
             // 
             // Output_ProgressBar
             // 
@@ -178,6 +179,7 @@
             this.Name = "MainForm";
             this.Text = "League of Legends Backgrounds Exporter";
             this.Activated += new System.EventHandler(this.MainForm_Activated);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 

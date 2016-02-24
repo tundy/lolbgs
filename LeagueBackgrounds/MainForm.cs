@@ -12,11 +12,15 @@ namespace LeagueBackgrounds
 {
     public partial class MainForm : Form
     {
+        #region BackgroundWorkers
+        private readonly BackgroundWorker _copyWorker = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
+        private readonly BackgroundWorker _checkWorker = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
+        #endregion
 
-        private readonly BackgroundWorker _copyWorker = new BackgroundWorker();
-        private readonly BackgroundWorker _checkWorker = new BackgroundWorker();
+        #region Init
         public MainForm()
         {
+            #region Load last or Default Destinations
             if (string.IsNullOrEmpty(Properties.Settings.Default.LeagueFolder))
                 Properties.Settings.Default.LeagueFolder = Static.FindLeagueOfLegends();
             if (string.IsNullOrEmpty(Properties.Settings.Default.DestinationFolder))
@@ -26,40 +30,98 @@ namespace LeagueBackgrounds
                 Properties.Settings.Default.DestinationFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures) + "\\League Of Legends BGs";
 #endif
             Properties.Settings.Default.Save();
+            #endregion
 
-            _copyWorker.WorkerReportsProgress = true;
-            _copyWorker.WorkerSupportsCancellation = true;
+            #region Adding EventHandlers to BackgroundWorkers
             _copyWorker.DoWork += CopyWorkerDoWork;
             _copyWorker.ProgressChanged += WorkerProgressChanged;
             _copyWorker.RunWorkerCompleted += WorkerRunWorkerCompleted;
 
-            _checkWorker.WorkerReportsProgress = true;
-            _checkWorker.WorkerSupportsCancellation = true;
             _checkWorker.DoWork += CheckWorker_DoWork;
             _checkWorker.ProgressChanged += WorkerProgressChanged;
             _checkWorker.RunWorkerCompleted += WorkerRunWorkerCompleted;
+            #endregion
 
             InitializeComponent();
-            FormClosing += MainForm_FormClosing;
 
+            #region DefaultValues
             TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
             TaskbarProgress.SetValue(Handle, 0, 1);
-
-            Options_Button.Click += Options_Button_Click;
+            #endregion
         }
+        #endregion
 
+        #region ButtonClicks
         private void Options_Button_Click(object sender, EventArgs e)
         {
-            Enabled = false;
-            var opt = new Options();
-            opt.ShowDialog();
-            if (opt.DialogResult != DialogResult.Retry)
-            {
-                Enabled = true;
-                return;
-            }
+            if (new Options().ShowDialog() != DialogResult.Retry) return;
+            RunCheckWorker();
+        }
 
-            Enabled = true;
+        private void LeagueFolder_Button_Click(object sender, EventArgs e)
+        {
+            var folderBrowserDialog = new FolderBrowserDialog
+            {
+                ShowNewFolderButton = false,
+                SelectedPath = LeagueFolder_TextBox.Text,
+                Description = @"Select League of Legends Folder that contains: RADS folder, lol.launcher.exe and so on."
+            };
+
+            if (folderBrowserDialog.ShowDialog() != DialogResult.OK) return;
+            LeagueFolder_TextBox.Text = folderBrowserDialog.SelectedPath.TrimEnd('\\');
+            Properties.Settings.Default.LeagueFolder = LeagueFolder_TextBox.Text;
+            Properties.Settings.Default.Save();
+        }
+
+        private void DestinationFolder_Button_Click(object sender, EventArgs e)
+        {
+            var folderBrowserDialog = new FolderBrowserDialog
+            {
+                ShowNewFolderButton = true,
+                SelectedPath = DestinationFolder_TextBox.Text,
+                Description = @"Select Folder where will be Splash Arts copied."
+            };
+
+            if (folderBrowserDialog.ShowDialog() != DialogResult.OK) return;
+            DestinationFolder_TextBox.Text = folderBrowserDialog.SelectedPath.TrimEnd('\\');
+            Properties.Settings.Default.DestinationFolder = DestinationFolder_TextBox.Text;
+            Properties.Settings.Default.Save();
+        }
+
+        private void Export_Button_Click(object sender, EventArgs e)
+        {
+            DisableMainForm();
+            Properties.Settings.Default.LeagueFolder = LeagueFolder_TextBox.Text;
+            Properties.Settings.Default.DestinationFolder = DestinationFolder_TextBox.Text.TrimEnd('\\');
+            Properties.Settings.Default.Save();
+            try
+            {
+                var images = Directory.GetFiles(Static.GetRadPath(), "*.jpg");
+                const string pattern = ".+_[Ss]plash_[0-9]+\\.jpg";
+
+                var splashArts = (from image in images select Regex.Match(Path.GetFileName(image)?? string.Empty, pattern) into match where match.Success select match.Value).ToList();
+                Output_ProgressBar.Maximum = splashArts.Count;
+                _copyWorker.RunWorkerAsync(splashArts);
+            }
+            catch (DirectoryNotFoundException)
+            {
+                Output_TextBox.AppendText("Directory not found." + Environment.NewLine);
+                EnableMainForm();
+            }
+        }
+
+        private void Cancel_Button_Click(object sender, EventArgs e)
+        {
+            _copyWorker.CancelAsync();
+            lock (_checkWorker)
+            {
+                _checkWorker.CancelAsync();
+            }
+        }
+        #endregion
+
+        private void RunCheckWorker()
+        {
             DisableMainForm();
 
             Properties.Settings.Default.DestinationFolder = DestinationFolder_TextBox.Text;
@@ -70,8 +132,8 @@ namespace LeagueBackgrounds
                 var images = Directory.GetFiles(Properties.Settings.Default.DestinationFolder.TrimEnd('\\'), "*.jpg");
                 const string pattern = ".+_[Ss]plash_[2-9]+\\.jpg";
 
-                var splashArts = (from image in images select Regex.Match(Path.GetFileName(image)?? string.Empty, pattern) into match where match.Success select match.Value).ToList();
-                Output_ProgressBar.Maximum = splashArts.Count*2;
+                var splashArts = (from image in images select Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern) into match where match.Success select match.Value).ToList();
+                Output_ProgressBar.Maximum = splashArts.Count * 2;
                 lock (_checkWorker)
                 {
                     _checkWorker.RunWorkerAsync(splashArts);
@@ -100,12 +162,61 @@ namespace LeagueBackgrounds
                     select Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern) into match where match.Success select match.Value);
         }*/
 
+        #region BackgroundWorkers
+        private void WorkerProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            if ((_copyWorker.CancellationPending && _copyWorker.IsBusy) || (_checkWorker.CancellationPending && _checkWorker.IsBusy)) return;
+            if(e.ProgressPercentage > Output_ProgressBar.Maximum)
+            {
+                Output_ProgressBar.Maximum = (int)((Output_ProgressBar.Maximum+1)*1.5);
+            }
+            Output_ProgressBar.Value = e.ProgressPercentage;
+            Text = @"[" + ((decimal)e.ProgressPercentage / Output_ProgressBar.Maximum).ToString("P") + @"] League of Legends Backgrounds Exporter";
+            if (e.UserState != null) Output_TextBox.AppendText((string)e.UserState);
+            TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Normal);
+            TaskbarProgress.SetValue(Handle, e.ProgressPercentage, Output_ProgressBar.Maximum);
+        }
+
+        private void WorkerRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            Export_Button.Visible = true;
+            Cancel_Button.Visible = false;
+            Options_Button.Enabled = true;
+            DestinationFolder_Button.Enabled = true;
+            DestinationFolder_TextBox.Enabled = true;
+            LeagueFolder_Button.Enabled = true;
+            LeagueFolder_TextBox.Enabled = true;
+            Output_ProgressBar.Value = Output_ProgressBar.Maximum;
+            Text = @"League of Legends Backgrounds Exporter";
+            UseWaitCursor = false;
+            try
+            {
+                if (Static.IsActive(Handle))
+                {
+                    TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
+                    TaskbarProgress.SetValue(Handle, 0, 1);
+                }
+                else
+                {
+                    TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Indeterminate);
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                //do(nothing);
+            }
+            GC.Collect();
+        }
+
         private void CheckWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             var splashArts = e.Argument as List<string>;
             if (splashArts == null) return;
 
-            _checkWorker.ReportProgress(0);
+            lock (_checkWorker)
+            {
+                _checkWorker.ReportProgress(0);
+            }
             var count = 0;
             var destinationPath = Properties.Settings.Default.DestinationFolder.TrimEnd('\\') + "\\";
 
@@ -114,7 +225,10 @@ namespace LeagueBackgrounds
             {
                 if (_checkWorker.CancellationPending) return;
                 // ReSharper disable once AccessToModifiedClosure
-                _checkWorker.ReportProgress(count++);
+                lock (_checkWorker)
+                {
+                    _checkWorker.ReportProgress(count++);
+                }
                 var bmp = new Bitmap(destinationPath + art);
                 var temp = new Color[(1 + bmp.Width / 50) * (1 + bmp.Height / 50)];
                 var i = 0;
@@ -132,12 +246,18 @@ namespace LeagueBackgrounds
                 bmp.Dispose();
             });
 
-            _checkWorker.ReportProgress(count);
+            lock (_checkWorker)
+            {
+                _checkWorker.ReportProgress(count);
+            }
             var duplicates = new List<string>();
             while (tempList.Count > 0)
             {
                 if (_checkWorker.CancellationPending) return;
-                _checkWorker.ReportProgress(count++);
+                lock (_checkWorker)
+                {
+                    _checkWorker.ReportProgress(count++);
+                }
                 var champ = tempList.First();
                 tempList.Remove(champ);
                 Parallel.ForEach(tempList, bitmap =>
@@ -174,132 +294,7 @@ namespace LeagueBackgrounds
             Properties.Settings.Default.IgnoreList = ignore;
             Properties.Settings.Default.Save();
         }
-
-        private void LeagueFolder_Button_Click(object sender, EventArgs e)
-        {
-            var folderBrowserDialog = new FolderBrowserDialog
-            {
-                ShowNewFolderButton = false,
-                SelectedPath = LeagueFolder_TextBox.Text,
-                Description = @"Select League of Legends Folder that contains: RADS folder, lol.launcher.exe and so on."
-            };
-
-            if (folderBrowserDialog.ShowDialog() != DialogResult.OK) return;
-            LeagueFolder_TextBox.Text = folderBrowserDialog.SelectedPath.TrimEnd('\\');
-            Properties.Settings.Default.LeagueFolder = LeagueFolder_TextBox.Text;
-            Properties.Settings.Default.Save();
-        }
-
-        private void DestinationFolder_Button_Click(object sender, EventArgs e)
-        {
-            var folderBrowserDialog = new FolderBrowserDialog
-            {
-                ShowNewFolderButton = true,
-                SelectedPath = DestinationFolder_TextBox.Text,
-                Description = @"Select Folder where will be Splash Arts copied."
-            };
-
-            if (folderBrowserDialog.ShowDialog() != DialogResult.OK) return;
-            DestinationFolder_TextBox.Text = folderBrowserDialog.SelectedPath.TrimEnd('\\');
-            Properties.Settings.Default.DestinationFolder = DestinationFolder_TextBox.Text;
-            Properties.Settings.Default.Save();
-        }
-
-        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            _copyWorker.CancelAsync();
-            _checkWorker.CancelAsync();
-            Properties.Settings.Default.LeagueFolder = LeagueFolder_TextBox.Text.TrimEnd('\\');
-            Properties.Settings.Default.DestinationFolder = DestinationFolder_TextBox.Text.TrimEnd('\\');
-            Properties.Settings.Default.Save();
-        }
-
-        private void Export_Button_Click(object sender, EventArgs e)
-        {
-            DisableMainForm();
-            Properties.Settings.Default.LeagueFolder = LeagueFolder_TextBox.Text;
-            Properties.Settings.Default.DestinationFolder = DestinationFolder_TextBox.Text.TrimEnd('\\');
-            Properties.Settings.Default.Save();
-            try
-            {
-                var images = Directory.GetFiles(Static.GetRadPath(), "*.jpg");
-                const string pattern = ".+_[Ss]plash_[0-9]+\\.jpg";
-
-                var splashArts = (from image in images select Regex.Match(Path.GetFileName(image)?? string.Empty, pattern) into match where match.Success select match.Value).ToList();
-                Output_ProgressBar.Maximum = splashArts.Count;
-                _copyWorker.RunWorkerAsync(splashArts);
-            }
-            catch (DirectoryNotFoundException)
-            {
-                Output_TextBox.AppendText("Directory not found." + Environment.NewLine);
-                EnableMainForm();
-            }
-        }
-
-        private void DisableMainForm()
-        {
-            Cancel_Button.Visible = true;
-            Export_Button.Visible = false;
-            Options_Button.Enabled = false;
-            LeagueFolder_Button.Enabled = false;
-            LeagueFolder_TextBox.Enabled = false;
-            DestinationFolder_Button.Enabled = false;
-            DestinationFolder_TextBox.Enabled = false;
-            Output_ProgressBar.Value = 0;
-            Output_TextBox.Clear();
-            UseWaitCursor = true;
-        }
-
-        private void EnableMainForm()
-        {
-            WorkerRunWorkerCompleted(this, null);
-            Output_ProgressBar.Value = 0;
-        }
-        private void WorkerRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            Export_Button.Visible = true;
-            Cancel_Button.Visible = false;
-            Options_Button.Enabled = true;
-            DestinationFolder_Button.Enabled = true;
-            DestinationFolder_TextBox.Enabled = true;
-            LeagueFolder_Button.Enabled = true;
-            LeagueFolder_TextBox.Enabled = true;
-            Output_ProgressBar.Value = Output_ProgressBar.Maximum;
-            Text = @"League of Legends Backgrounds Exporter";
-            UseWaitCursor = false;
-            try
-            {
-                if (Static.IsActive(Handle))
-                {
-                    TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
-                    TaskbarProgress.SetValue(Handle, 0, 1);
-                }
-                else
-                {
-                    TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Indeterminate);
-                }
-            }
-            catch (ObjectDisposedException)
-            {
-                //do(nothing);
-            }
-            GC.Collect();
-        }
-
-        private void WorkerProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            if ((_copyWorker.CancellationPending && _copyWorker.IsBusy) || (_checkWorker.CancellationPending && _checkWorker.IsBusy)) return;
-            if(e.ProgressPercentage > Output_ProgressBar.Maximum)
-            {
-                Output_ProgressBar.Maximum = (int)((Output_ProgressBar.Maximum+1)*1.5);
-            }
-            Output_ProgressBar.Value = e.ProgressPercentage;
-            Text = @"[" + ((decimal)e.ProgressPercentage / Output_ProgressBar.Maximum).ToString("P") + @"] League of Legends Backgrounds Exporter";
-            if (e.UserState != null) Output_TextBox.AppendText((string)e.UserState);
-            TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Normal);
-            TaskbarProgress.SetValue(Handle, e.ProgressPercentage, Output_ProgressBar.Maximum);
-        }
-
+        
         private void CopyWorkerDoWork(object sender, DoWorkEventArgs e)
         {
             var splashArts = e.Argument as List<string>;
@@ -347,11 +342,26 @@ namespace LeagueBackgrounds
                 }
             });
         }
+        #endregion
 
-        private void Cancel_Button_Click(object sender, EventArgs e)
+        private void DisableMainForm()
         {
-            _copyWorker.CancelAsync();
-            _checkWorker.CancelAsync();
+            Cancel_Button.Visible = true;
+            Export_Button.Visible = false;
+            Options_Button.Enabled = false;
+            LeagueFolder_Button.Enabled = false;
+            LeagueFolder_TextBox.Enabled = false;
+            DestinationFolder_Button.Enabled = false;
+            DestinationFolder_TextBox.Enabled = false;
+            Output_ProgressBar.Value = 0;
+            Output_TextBox.Clear();
+            UseWaitCursor = true;
+        }
+
+        private void EnableMainForm()
+        {
+            WorkerRunWorkerCompleted(this, null);
+            Output_ProgressBar.Value = 0;
         }
 
         private void MainForm_Activated(object sender, EventArgs e)
@@ -359,6 +369,18 @@ namespace LeagueBackgrounds
             if (_copyWorker.IsBusy || _checkWorker.IsBusy) return;
             TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
             TaskbarProgress.SetValue(Handle, 0, 1);
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            _copyWorker.CancelAsync();
+            lock (_checkWorker)
+            {
+                _checkWorker.CancelAsync();
+            }
+            Properties.Settings.Default.LeagueFolder = LeagueFolder_TextBox.Text.TrimEnd('\\');
+            Properties.Settings.Default.DestinationFolder = DestinationFolder_TextBox.Text.TrimEnd('\\');
+            Properties.Settings.Default.Save();
         }
     }
 }

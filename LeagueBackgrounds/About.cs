@@ -20,7 +20,7 @@ namespace LeagueBackgrounds
             catch
             {
                 Contact.LinkClicked -= Contact_LinkClicked;
-                Contact.Text = @"mailto:tunder.matus+tundy@gmail.com";
+                Contact.Text = @"mailto:tunder.matus+lolBackgrounds@gmail.com";
             }
         }
     }
