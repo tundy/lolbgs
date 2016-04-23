@@ -58,8 +58,7 @@ namespace LeagueBackgrounds
             {
                 for (var y = 0; y < 32; ++y)
                 {
-                    if (splash.GetPixel(x, y) == color) continue;
-                    return false;
+                    if (splash.GetPixel(x, y) != color) return false;
                 }
             }
             return true;

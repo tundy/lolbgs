@@ -170,7 +170,13 @@ namespace LeagueBackgrounds
                 Output_ProgressBar.Maximum = (int)((Output_ProgressBar.Maximum+1)*1.5);
             }
             Output_ProgressBar.Value = e.ProgressPercentage;
-            Text = @"[" + ((decimal)e.ProgressPercentage / Output_ProgressBar.Maximum).ToString("P") + @"] League of Legends Backgrounds Exporter";
+            var percent = (decimal)e.ProgressPercentage/Output_ProgressBar.Maximum;
+            // GC every 10 %
+            if ((int)(percent*1000) % 100 == 0)
+            {
+                GC.Collect();
+            }
+            Text = $"[{percent.ToString("P")}] League of Legends Backgrounds Exporter";
             if (e.UserState != null) Output_TextBox.AppendText((string)e.UserState);
             TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Normal);
             TaskbarProgress.SetValue(Handle, e.ProgressPercentage, Output_ProgressBar.Maximum);
@@ -217,9 +223,12 @@ namespace LeagueBackgrounds
                 _checkWorker.ReportProgress(0);
             }
             var count = 0;
-            var destinationPath = Properties.Settings.Default.DestinationFolder.TrimEnd('\\') + "\\";
+            var destinationPath = Properties.Settings.Default.DestinationFolder.EndsWith("\\")
+                                ? Properties.Settings.Default.DestinationFolder
+                                : Properties.Settings.Default.DestinationFolder + "\\";
 
             var tempList = new List<Tuple<string, Color[]>>();
+            // Add every SpalshArt to list
             Parallel.ForEach(splashArts, art =>
             {
                 if (_checkWorker.CancellationPending) return;
@@ -270,21 +279,23 @@ namespace LeagueBackgrounds
                         lock (duplicates)
                         {
                             duplicates.Add(bitmap.Item1);
-                            _checkWorker.ReportProgress(count,
-                                champ.Item1 + "\t is duplicate of\t " + bitmap.Item1 + Environment.NewLine);
+                            _checkWorker.ReportProgress(count, $"{champ.Item1}\t is duplicate of\t {bitmap.Item1}{Environment.NewLine}");
                         }
                     }
                 });
             }
 
-            var tmp = Static.GetIgnoreList();
-            //Parallel.ForEach(duplicates, duplicate =>
-            foreach(var duplicate in duplicates)
+            Parallel.ForEach(duplicates, new ParallelOptions { MaxDegreeOfParallelism = 4 }, duplicate =>
             {
                 if (_checkWorker.CancellationPending) return;
                 File.Delete(destinationPath + duplicate);
-                    if (!tmp.Contains(duplicate))
-                        tmp.Add(duplicate);
+            });
+
+            var tmp = Static.GetIgnoreList();
+            foreach(var duplicate in duplicates)
+            {
+                if (_checkWorker.CancellationPending) return;
+                lock (tmp) if (!tmp.Contains(duplicate)) tmp.Add(duplicate);
             }
 
             var ignore = tmp.Where(r => !string.IsNullOrWhiteSpace(r)).Aggregate(string.Empty, (current, r) => current + (r + "\r\n"));
@@ -303,45 +314,74 @@ namespace LeagueBackgrounds
             Directory.CreateDirectory(Properties.Settings.Default.DestinationFolder + "\\");
             var sourcePath = Static.GetRadPath();
             const string pattern = "(.+)_[Ss]plash_[0-9]+\\.jpg";
-            var temp = string.Empty;
             // ReSharper disable once PossibleNullReferenceException
+
+            var ignoreList = Static.GetIgnoreList();
+            var champsList = Static.GetChampsList();
             Parallel.ForEach(splashArts, champ =>
             {
-                if (_copyWorker.CancellationPending) { return; }
-                var match = Regex.Match(champ, pattern);
-                if (match.Success) { temp = match.Groups[1].Value; }
-                if (!Static.GetIgnoreList().Contains(champ, StringComparer.OrdinalIgnoreCase) &&
-                    !Static.GetChampsList().Contains(temp, StringComparer.OrdinalIgnoreCase))
+                if (_copyWorker.CancellationPending)
                 {
-                    if (!Static.IsEmptySplash(new Bitmap(sourcePath + champ)))
-                    {
-                        try
-                        {
-                            File.Copy(sourcePath + champ, Properties.Settings.Default.DestinationFolder + "\\" + champ,
-                                true);
-                            _copyWorker.ReportProgress(count++
-                                /*, "File copied from " + sourcePath + champ + " to " + Properties.Settings.Default.DestinationFolder + "\\" + champ + " successfully!" + Environment.NewLine*/);
-                        }
-                        catch
-                        {
-                            _copyWorker.ReportProgress(count++,
-                                "Failed to copy from " + sourcePath + champ + " to " +
-                                Properties.Settings.Default.DestinationFolder + "\\" + champ + " !" +
-                                Environment.NewLine);
-                        }
-                    }
-                    else
-                    {
-                        _copyWorker.ReportProgress(count++, "Ignoring (not finished) " + champ + Environment.NewLine);
-                    }
+                    return;
+                }
+                var match = Regex.Match(champ, pattern);
+                string temp;
+                if (match.Success)
+                {
+                    temp = match.Groups[1].Value;
                 }
                 else
                 {
-                    _copyWorker.ReportProgress(count++, "Ignoring " + champ + Environment.NewLine);
+                    _copyWorker.ReportProgress(count, $"{sourcePath}{champ} Is not a Splash Art !{Environment.NewLine}");
+                    return;
+                }
+#if DEBUG
+                var a = ignoreList.Contains(champ, StringComparer.OrdinalIgnoreCase);
+                var b = champsList.Contains(temp, StringComparer.OrdinalIgnoreCase);
+                if (!a && !b)
+#else
+                if (!ignoreList.Contains(champ, StringComparer.OrdinalIgnoreCase) && !champsList.Contains(temp, StringComparer.OrdinalIgnoreCase))
+#endif
+                {
+#if DEBUG
+                        try
+                    {
+#endif
+                        if (!Static.IsEmptySplash(new Bitmap(sourcePath + champ)))
+                        {
+                            try
+                            {
+                                File.Copy(sourcePath + champ, Properties.Settings.Default.DestinationFolder + "\\" + champ, true);
+                                _copyWorker.ReportProgress(count++
+                                    //, $@"File copied from {sourcePath}{champ} to {Properties.Settings.Default.DestinationFolder}\{champ} successfully!{Environment.NewLine}"
+                                    );
+                            }
+                            catch
+                            {
+                                _copyWorker.ReportProgress(count++
+                                    , $@"Failed to copy from {sourcePath}{champ} to {Properties.Settings.Default.DestinationFolder}\{champ} !{Environment.NewLine}"
+                                    );
+                            }
+                        }
+                        else
+                        {
+                            _copyWorker.ReportProgress(count++, $"Ignoring (not finished) {champ}{Environment.NewLine}");
+                        }
+#if DEBUG
+                    }
+                    catch (Exception)
+                    {
+                        throw;
+                    }
+#endif
+                }
+                else
+                {
+                    _copyWorker.ReportProgress(count++, $"Ignoring {champ}{Environment.NewLine}");
                 }
             });
         }
-        #endregion
+#endregion
 
         private void DisableMainForm()
         {

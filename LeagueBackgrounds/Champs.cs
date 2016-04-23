@@ -39,12 +39,13 @@ namespace LeagueBackgrounds
         //private delegate void UserControlDelegate(Control parentControl, UserControl userControl);
         //private delegate void EditPictureDelegate(Control parentControl, Picture userControl, List<string> temp, string source);
 
+        private const string Loading = @"      [LOADING...]";
         private void Champs_Load(object sender, EventArgs e)
         {
-            Text += @"      [LOADING...]";
+            Text += Loading;
             Cursor.Current = Cursors.WaitCursor;
-            //SuspendLayout();
             ChampsPanel.SuspendLayout();
+            SuspendLayout();
             string source;
             try
             {
@@ -60,7 +61,7 @@ namespace LeagueBackgrounds
 
             var list = images.Select(image => Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern))
                        .Where(match => match.Success)
-                       .Where(match => File.Exists(source + "\\" + match.Groups[1].Value + "_0.jpg"))/*.ToList()*/;
+                       .Where(match => File.Exists($@"{source}\{match.Groups[1].Value}_0.jpg"))/*.ToList()*/;
             var temp = Static.GetChampsList();
             //var sl = new SortedList<string, Picture>();
             //Parallel.For(0, list.Count, i =>
@@ -80,13 +81,14 @@ namespace LeagueBackgrounds
                     Margin = new Padding(8),
                     BorderStyle = BorderStyle.Fixed3D,
                     Cursor = Cursors.Hand,
-                    Tag = match.Value
+                    Tag = match.Value,
+                    Visible = false
                 };
                 lock (temp)
                 {
                     pic.Image = temp.Contains(match.Groups[1].Value)
-                        ? MakeGrayscale(new Bitmap(source + match.Value))
-                        : Image.FromFile(source + match.Value);
+                                ? MakeGrayscale(new Bitmap(source + match.Value))
+                                : Image.FromFile(source + match.Value);
                 }
                 return pic;
             })))
@@ -116,8 +118,8 @@ namespace LeagueBackgrounds
                 ChampsPanel.Controls.Add(pair.Value);
             }*/
 
+            ResumeLayout();
             ChampsPanel.ResumeLayout();
-            //ResumeLayout();
             GC.Collect();
         }
 
@@ -146,10 +148,17 @@ namespace LeagueBackgrounds
 
         private void Champs_Shown(object sender, EventArgs e)
         {
+            ChampsPanel.SuspendLayout();
+            SuspendLayout();
             foreach (var control in ChampsPanel.Controls.OfType<Picture>())
+            {
                 control.PictureBox.Click += img_Click;
-            if (Text.EndsWith("      [LOADING...]"))
-                Text = Text.Substring(0, Text.LastIndexOf("      [LOADING...]", StringComparison.Ordinal));
+                control.Visible = true;
+            }
+            if (Text.EndsWith(Loading))
+                Text = Text.Substring(0, Text.LastIndexOf(Loading, StringComparison.Ordinal));
+            ResumeLayout();
+            ChampsPanel.ResumeLayout();
             Cursor.Current = Cursors.Default;
             GC.Collect();
         }
