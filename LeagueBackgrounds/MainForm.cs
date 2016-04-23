@@ -162,6 +162,8 @@ namespace LeagueBackgrounds
         }*/
 
         #region BackgroundWorkers Methods
+
+        private int _counter;
         private void WorkerProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             if ((_copyWorker.CancellationPending && _copyWorker.IsBusy) || (_checkWorker.CancellationPending && _checkWorker.IsBusy)) return;
@@ -171,10 +173,16 @@ namespace LeagueBackgrounds
             }
             Output_ProgressBar.Value = e.ProgressPercentage;
             var percent = (decimal)e.ProgressPercentage/Output_ProgressBar.Maximum;
-            // GC every 10 %
-            if ((int)(percent*1000) % 100 == 0)
+            // GC after every 10 %
+            var p = (int)(percent*100);
+            if (p > _counter+10)
             {
+                _counter += 10;
                 GC.Collect();
+            }
+            else if (p < _counter)
+            {
+                _counter = p;
             }
             Text = $"[{percent.ToString("P")}] League of Legends Backgrounds Exporter";
             if (e.UserState != null) Output_TextBox.AppendText((string)e.UserState);
@@ -184,6 +192,7 @@ namespace LeagueBackgrounds
 
         private void WorkerRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            _counter = 0;
             Export_Button.Visible = true;
             Cancel_Button.Visible = false;
             Options_Button.Enabled = true;
@@ -285,7 +294,7 @@ namespace LeagueBackgrounds
                 });
             }
 
-            Parallel.ForEach(duplicates, new ParallelOptions { MaxDegreeOfParallelism = 4 }, duplicate =>
+            Parallel.ForEach(duplicates, new ParallelOptions { MaxDegreeOfParallelism = 3 }, duplicate =>
             {
                 if (_checkWorker.CancellationPending) return;
                 File.Delete(destinationPath + duplicate);
