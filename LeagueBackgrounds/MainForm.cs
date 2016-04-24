@@ -7,6 +7,11 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Linq;
 using System.Threading.Tasks;
+using static LeagueBackgrounds.Properties.Settings;
+
+#if DEBUG
+using System.Diagnostics;
+#endif
 
 namespace LeagueBackgrounds
 {
@@ -21,15 +26,15 @@ namespace LeagueBackgrounds
         public MainForm()
         {
             #region Load last or Default Destinations
-            if (string.IsNullOrEmpty(Properties.Settings.Default.LeagueFolder))
-                Properties.Settings.Default.LeagueFolder = Static.FindLeagueOfLegends();
-            if (string.IsNullOrEmpty(Properties.Settings.Default.DestinationFolder))
+            if (string.IsNullOrEmpty(Default.LeagueFolder))
+                Default.LeagueFolder = Static.FindLeagueOfLegends();
+            if (string.IsNullOrEmpty(Default.DestinationFolder))
 #if DEBUG
                 Properties.Settings.Default.DestinationFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Backgrounds\\League Of Legends";
 #else
-                Properties.Settings.Default.DestinationFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures) + "\\League Of Legends BGs";
+                Default.DestinationFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures) + "\\League Of Legends BGs";
 #endif
-            Properties.Settings.Default.Save();
+            Default.Save();
             #endregion
 
             #region Adding EventHandlers to BackgroundWorkers
@@ -68,8 +73,8 @@ namespace LeagueBackgrounds
 
             if (folderBrowserDialog.ShowDialog() != DialogResult.OK) return;
             LeagueFolder_TextBox.Text = folderBrowserDialog.SelectedPath.TrimEnd('\\');
-            Properties.Settings.Default.LeagueFolder = LeagueFolder_TextBox.Text;
-            Properties.Settings.Default.Save();
+            Default.LeagueFolder = LeagueFolder_TextBox.Text;
+            Default.Save();
         }
 
         private void DestinationFolder_Button_Click(object sender, EventArgs e)
@@ -83,16 +88,16 @@ namespace LeagueBackgrounds
 
             if (folderBrowserDialog.ShowDialog() != DialogResult.OK) return;
             DestinationFolder_TextBox.Text = folderBrowserDialog.SelectedPath.TrimEnd('\\');
-            Properties.Settings.Default.DestinationFolder = DestinationFolder_TextBox.Text;
-            Properties.Settings.Default.Save();
+            Default.DestinationFolder = DestinationFolder_TextBox.Text;
+            Default.Save();
         }
 
         private void Export_Button_Click(object sender, EventArgs e)
         {
             DisableMainForm();
-            Properties.Settings.Default.LeagueFolder = LeagueFolder_TextBox.Text;
-            Properties.Settings.Default.DestinationFolder = DestinationFolder_TextBox.Text.TrimEnd('\\');
-            Properties.Settings.Default.Save();
+            Default.LeagueFolder = LeagueFolder_TextBox.Text;
+            Default.DestinationFolder = DestinationFolder_TextBox.Text.TrimEnd('\\');
+            Default.Save();
             try
             {
                 var images = Directory.GetFiles(Static.GetRadPath(), "*.jpg");
@@ -123,12 +128,12 @@ namespace LeagueBackgrounds
         {
             DisableMainForm();
 
-            Properties.Settings.Default.DestinationFolder = DestinationFolder_TextBox.Text;
-            Properties.Settings.Default.Save();
+            Default.DestinationFolder = DestinationFolder_TextBox.Text;
+            Default.Save();
             //_checkWorker.RunWorkerAsync();
             try
             {
-                var images = Directory.GetFiles(Properties.Settings.Default.DestinationFolder.TrimEnd('\\'), "*.jpg");
+                var images = Directory.GetFiles(Default.DestinationFolder.TrimEnd('\\'), "*.jpg");
                 const string pattern = ".+_[Ss]plash_[2-9]+\\.jpg";
 
                 var splashArts = (from image in images select Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern) into match where match.Success select match.Value).ToList();
@@ -193,6 +198,7 @@ namespace LeagueBackgrounds
         private void WorkerRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             _counter = 0;
+            Output_ProgressBar.Value = 0;
             Export_Button.Visible = true;
             Cancel_Button.Visible = false;
             Options_Button.Enabled = true;
@@ -214,9 +220,14 @@ namespace LeagueBackgrounds
                     TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Indeterminate);
                 }
             }
+#if DEBUG
+            catch (ObjectDisposedException ex)
+            {
+                Debug.WriteLine(ex);
+#else
             catch (ObjectDisposedException)
             {
-                //do(nothing);
+#endif
             }
             GC.Collect();
             UseWaitCursor = false;
@@ -232,11 +243,11 @@ namespace LeagueBackgrounds
                 _checkWorker.ReportProgress(0);
             }
             var count = 0;
-            var destinationPath = Properties.Settings.Default.DestinationFolder.EndsWith("\\")
-                                ? Properties.Settings.Default.DestinationFolder
-                                : Properties.Settings.Default.DestinationFolder + "\\";
+            var destinationPath = Default.DestinationFolder.EndsWith("\\")
+                                ? Default.DestinationFolder
+                                : Default.DestinationFolder + "\\";
 
-            var tempList = new List<Tuple<string, Color[]>>();
+            var tempList = new Queue<Tuple<string, Color[]>>();
             // Add every SpalshArt to list
             Parallel.ForEach(splashArts, art =>
             {
@@ -258,7 +269,7 @@ namespace LeagueBackgrounds
                 }
                 lock (tempList)
                 {
-                    tempList.Add(new Tuple<string, Color[]>(art, temp));
+                    tempList.Enqueue(new Tuple<string, Color[]>(art, temp));
                 }
                 bmp.Dispose();
             });
@@ -267,7 +278,7 @@ namespace LeagueBackgrounds
             {
                 _checkWorker.ReportProgress(count);
             }
-            var duplicates = new List<string>();
+            var tmp = Static.GetIgnoreList();
             while (tempList.Count > 0)
             {
                 if (_checkWorker.CancellationPending) return;
@@ -275,43 +286,27 @@ namespace LeagueBackgrounds
                 {
                     _checkWorker.ReportProgress(count++);
                 }
-                var champ = tempList.First();
-                tempList.Remove(champ);
-                Parallel.ForEach(tempList, bitmap =>
+                var champ = tempList.Dequeue();
+                var remaining = tempList.ToList();
+                Parallel.ForEach(remaining, bitmap =>
                 {
                     if (_checkWorker.CancellationPending) return;
                     lock (champ)
                     {
-                        // Just fuck you riot ... Addding duplicates to same champion ...
+                        // Come on riot ... Addding duplicates to same champion ...
                         //if (bitmap.Item1.StartsWith(champ1.Item1.Split('_')[0])) continue;
                         if (!Static.CompareSplash(champ.Item2, bitmap.Item2)) return;
-                        lock (duplicates)
-                        {
-                            duplicates.Add(bitmap.Item1);
-                            _checkWorker.ReportProgress(count, $"{champ.Item1}\t is duplicate of\t {bitmap.Item1}{Environment.NewLine}");
-                        }
+                        File.Delete(destinationPath + bitmap.Item1);
+                        lock (tmp) if (!tmp.Contains(bitmap.Item1)) tmp.Add(bitmap.Item1);
+                        _checkWorker.ReportProgress(count, $"{champ.Item1}\t is duplicate of\t {bitmap.Item1}{Environment.NewLine}");
                     }
                 });
             }
-
-            Parallel.ForEach(duplicates, new ParallelOptions { MaxDegreeOfParallelism = 3 }, duplicate =>
-            {
-                if (_checkWorker.CancellationPending) return;
-                File.Delete(destinationPath + duplicate);
-            });
-
-            var tmp = Static.GetIgnoreList();
-            foreach(var duplicate in duplicates)
-            {
-                if (_checkWorker.CancellationPending) return;
-                lock (tmp) if (!tmp.Contains(duplicate)) tmp.Add(duplicate);
-            }
-
-            var ignore = tmp.Where(r => !string.IsNullOrWhiteSpace(r)).Aggregate(string.Empty, (current, r) => current + (r + "\r\n"));
+            var ignore = tmp.Where(r => !string.IsNullOrWhiteSpace(r)).Aggregate(string.Empty, (current, r) => $"{current}{r}\r\n");
             ignore = ignore.Trim();
             if (ignore.Length == 0) ignore = null;
-            Properties.Settings.Default.IgnoreList = ignore;
-            Properties.Settings.Default.Save();
+            Default.IgnoreList = ignore;
+            Default.Save();
         }
         
         private void CopyWorkerDoWork(object sender, DoWorkEventArgs e)
@@ -320,11 +315,9 @@ namespace LeagueBackgrounds
             if (splashArts == null) return;
             _copyWorker.ReportProgress(0);
             var count = 1;
-            Directory.CreateDirectory(Properties.Settings.Default.DestinationFolder + "\\");
+            Directory.CreateDirectory(Default.DestinationFolder + "\\");
             var sourcePath = Static.GetRadPath();
             const string pattern = "(.+)_[Ss]plash_[0-9]+\\.jpg";
-            // ReSharper disable once PossibleNullReferenceException
-
             var ignoreList = Static.GetIgnoreList();
             var champsList = Static.GetChampsList();
             Parallel.ForEach(splashArts, champ =>
@@ -360,7 +353,7 @@ namespace LeagueBackgrounds
                         {
                             try
                             {
-                                File.Copy(sourcePath + champ, Properties.Settings.Default.DestinationFolder + "\\" + champ, true);
+                                File.Copy(sourcePath + champ, Default.DestinationFolder + "\\" + champ, true);
                                 _copyWorker.ReportProgress(count++
                                     //, $@"File copied from {sourcePath}{champ} to {Properties.Settings.Default.DestinationFolder}\{champ} successfully!{Environment.NewLine}"
                                     );
@@ -368,7 +361,7 @@ namespace LeagueBackgrounds
                             catch
                             {
                                 _copyWorker.ReportProgress(count++
-                                    , $@"Failed to copy from {sourcePath}{champ} to {Properties.Settings.Default.DestinationFolder}\{champ} !{Environment.NewLine}"
+                                    , $@"Failed to copy from {sourcePath}{champ} to {Default.DestinationFolder}\{champ} !{Environment.NewLine}"
                                     );
                             }
                         }
@@ -409,7 +402,6 @@ namespace LeagueBackgrounds
         private void EnableMainForm()
         {
             WorkerRunWorkerCompleted(this, null);
-            Output_ProgressBar.Value = 0;
         }
 
         private void MainForm_Activated(object sender, EventArgs e)
@@ -426,9 +418,9 @@ namespace LeagueBackgrounds
             {
                 _checkWorker.CancelAsync();
             }
-            Properties.Settings.Default.LeagueFolder = LeagueFolder_TextBox.Text.TrimEnd('\\');
-            Properties.Settings.Default.DestinationFolder = DestinationFolder_TextBox.Text.TrimEnd('\\');
-            Properties.Settings.Default.Save();
+            Default.LeagueFolder = LeagueFolder_TextBox.Text.TrimEnd('\\');
+            Default.DestinationFolder = DestinationFolder_TextBox.Text.TrimEnd('\\');
+            Default.Save();
         }
     }
 }
