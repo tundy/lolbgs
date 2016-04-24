@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
+using static LeagueBackgrounds.Properties.Settings;
 
 namespace LeagueBackgrounds
 {
@@ -13,7 +14,7 @@ namespace LeagueBackgrounds
         internal static List<string> GetIgnoreList()
         {
             var result = new List<string>();
-            var settings = Properties.Settings.Default.IgnoreList;
+            var settings = Default.IgnoreList;
             if (string.IsNullOrEmpty(settings)) return result;
             settings = settings.Replace("\r\n", "\n");
             var tmp = settings.Split('\n');
@@ -24,7 +25,7 @@ namespace LeagueBackgrounds
         internal static List<string> GetChampsList()
         {
             var result = new List<string>();
-            var settings = Properties.Settings.Default.Champs;
+            var settings = Default.Champs;
             if (string.IsNullOrEmpty(settings)) return result;
             settings = settings.Replace("\r\n", "\n");
             var tmp = settings.Split('\n');
@@ -45,7 +46,7 @@ namespace LeagueBackgrounds
         
         internal static string GetRadPath()
         {
-            var source = Properties.Settings.Default.LeagueFolder + "\\RADS\\projects\\lol_air_client\\releases\\";
+            var source = Default.LeagueFolder + "\\RADS\\projects\\lol_air_client\\releases\\";
             var directories = Directory.GetDirectories(source);
             return directories[0] != null ? directories[0] + "\\deploy\\assets\\images\\champions\\" : null;
         }

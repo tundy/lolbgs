@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -19,26 +20,6 @@ namespace LeagueBackgrounds
             Shown += Champs_Shown;
         }
         
-        /*
-        private static void AddUserControl(Control control, UserControl userControl)
-        {
-            if (control == null) throw new ArgumentNullException(nameof(control));
-            if (userControl == null) throw new ArgumentNullException(nameof(userControl));
-            if (control.InvokeRequired)
-            {
-                control.Invoke(new UserControlDelegate(AddUserControl), control, userControl);
-                //control.Invoke(new Action(() => { control.Controls.Add(userControl); }));
-            }
-            else
-            {
-                control.Controls.Add(userControl);
-            }
-        }
-        */
-
-        //private delegate void UserControlDelegate(Control parentControl, UserControl userControl);
-        //private delegate void EditPictureDelegate(Control parentControl, Picture userControl, List<string> temp, string source);
-
         private const string Loading = @"      [LOADING...]";
         private void Champs_Load(object sender, EventArgs e)
         {
@@ -61,91 +42,47 @@ namespace LeagueBackgrounds
 
             var list = images.Select(image => Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern))
                        .Where(match => match.Success)
-                       .Where(match => File.Exists($@"{source}\{match.Groups[1].Value}_0.jpg"))/*.ToList()*/;
+                       .Where(match => File.Exists($@"{source}\{match.Groups[1].Value}_0.jpg")).ToList();
             var temp = Static.GetChampsList();
-            //var sl = new SortedList<string, Picture>();
-            //Parallel.For(0, list.Count, i =>
-            //Parallel.ForEach(list, match =>
-            //{
-                //var match = list[i];
-                //var pic = new Picture
-            var taskList = new List<Task<Picture>>();
-            foreach (var task in list.Select(match => new Task<Picture>(() =>
-            {
-                var pic = new Picture
+            var picturelist = new Picture[list.Count];
+            // For loading pictures from disk
+            Parallel.For(0, picturelist.Length, i =>
                 {
-                    Width = 96,
-                    Height = 96,
-                    SizeMode = PictureBoxSizeMode.StretchImage,
-                    Name = match.Groups[1].Value,
-                    Margin = new Padding(8),
-                    BorderStyle = BorderStyle.Fixed3D,
-                    Cursor = Cursors.Hand,
-                    Tag = match.Value,
-                    Visible = false
-                };
-                lock (temp)
-                {
-                    pic.Image = temp.Contains(match.Groups[1].Value)
-                                ? MakeGrayscale(new Bitmap(source + match.Value))
-                                : Image.FromFile(source + match.Value);
+                    picturelist[i] = new Picture
+                    {
+                        Width = 96,
+                        Height = 96,
+                        SizeMode = PictureBoxSizeMode.StretchImage,
+                        Name = list[i].Groups[1].Value,
+                        Margin = new Padding(8),
+                        BorderStyle = BorderStyle.Fixed3D,
+                        Cursor = Cursors.Hand,
+                        Tag = list[i].Value,
+                        Visible = false,
+                        Image = temp.Contains(list[i].Groups[1].Value)
+                            ? MakeGrayscale(new Bitmap(source + list[i].Value))
+                            : Image.FromFile(source + list[i].Value)
+                    };
                 }
-                return pic;
-            })))
+                );
+            for (var j = 0; j < picturelist.Length; j++)
             {
-                task.Start();
-                taskList.Add(task);
+                if (picturelist[j] == null) // slow loading ?
+                {
+                    j--;
+                    Thread.Sleep(100);
+                }
+                else
+                {
+                    ChampsPanel.Controls.Add(picturelist[j]);
+                }
             }
-
-            foreach (var task in taskList)
-            {
-                task.Wait();
-                ChampsPanel.Controls.Add(task.Result);
-                //ChampsPanel.BeginInvoke(new EditPictureDelegate(EditPicture), ChampsPanel, task.Result, temp, source);
-            }
-
-            /*foreach (Picture pic in ChampsPanel.Controls)
-            {
-                pic.Image = temp.Contains(pic.Name)
-                            ? MakeGrayscale(new Bitmap(source + pic.Tag))
-                            : Image.FromFile(source + pic.Tag);
-                //ChampsPanel.BeginInvoke(new EditPictureDelegate(EditPicture), ChampsPanel, pic, temp, source);
-            }*/
-
-            /*foreach (var pair in sl)
-            {
-                //ChampsPanel.BeginInvoke(new AddUserControlDelegate(AddUserControl), ChampsPanel, pair.Value);
-                ChampsPanel.Controls.Add(pair.Value);
-            }*/
-
+            
             ResumeLayout();
             ChampsPanel.ResumeLayout();
             GC.Collect();
         }
-
-        /*private void EditPicture(Control parentcontrol, Picture picture, List<string> temp, string source)
-        {
-            if (parentcontrol == null) throw new ArgumentNullException(nameof(parentcontrol));
-            if (picture == null) throw new ArgumentNullException(nameof(picture));
-            if (parentcontrol.InvokeRequired)
-            {
-                parentcontrol.Invoke(new EditPictureDelegate(EditPicture), parentcontrol, picture, temp, source);
-                //parentcontrol.Invoke(new Action(() => { control.Controls.Add(userControl); }));
-            }
-            else
-            {
-                //picture.Width = 96;
-                //picture.Height = 96;
-                //picture.SizeMode = PictureBoxSizeMode.StretchImage;
-                //picture.Margin = new Padding(8);
-                //picture.BorderStyle = BorderStyle.Fixed3D;
-                //picture.Cursor = Cursors.Hand;
-                picture.Image = temp.Contains(picture.Name)
-                                ? MakeGrayscale(new Bitmap(source + picture.Tag))
-                                : Image.FromFile(source + picture.Tag);
-            }
-        }*/
-
+        
         private void Champs_Shown(object sender, EventArgs e)
         {
             ChampsPanel.SuspendLayout();
