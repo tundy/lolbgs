@@ -144,7 +144,7 @@ namespace LeagueBackgrounds
                 }
                 //_checkWorker.RunWorkerAsync(GetSplashArts(DestinationFolder_TextBox.Text));
             }
-            catch (Exception)
+            catch (DirectoryNotFoundException)
             {
                 Output_TextBox.AppendText("Directory not found." + Environment.NewLine);
                 EnableMainForm();
@@ -288,7 +288,9 @@ namespace LeagueBackgrounds
                 }
                 var champ = tempList.Dequeue();
                 var remaining = tempList.ToList();
+                // ReSharper disable ImplicitlyCapturedClosure
                 Parallel.ForEach(remaining, bitmap =>
+                    // ReSharper restore ImplicitlyCapturedClosure
                 {
                     if (_checkWorker.CancellationPending) return;
                     lock (champ)
