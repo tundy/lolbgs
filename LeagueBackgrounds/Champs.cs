@@ -27,15 +27,7 @@ namespace LeagueBackgrounds
             Cursor.Current = Cursors.WaitCursor;
             ChampsPanel.SuspendLayout();
             SuspendLayout();
-            string source;
-            try
-            {
-                source = Static.GetRadPath();
-            }
-            catch (DirectoryNotFoundException)
-            {
-                return;
-            }
+            var source = Static.GetRadPath();
             if (string.IsNullOrEmpty(source)) return;
             var images = Directory.GetFiles(source, "*.png");
             const string pattern = "(.+)_[Ss]quare_0\\.png";
@@ -219,7 +211,7 @@ namespace LeagueBackgrounds
             //ResumeLayout();
         }
 
-        public static Bitmap MakeGrayscale(Bitmap original)
+        private static Bitmap MakeGrayscale(Bitmap original)
         {
             //create a blank bitmap the same size as original
             var newBitmap = new Bitmap(original.Width, original.Height);

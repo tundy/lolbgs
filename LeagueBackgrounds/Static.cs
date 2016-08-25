@@ -47,6 +47,7 @@ namespace LeagueBackgrounds
         internal static string GetRadPath()
         {
             var source = Default.LeagueFolder + "\\RADS\\projects\\lol_air_client\\releases\\";
+            if (!Directory.Exists(source)) return null;
             var directories = Directory.GetDirectories(source);
             return directories[0] != null ? directories[0] + "\\deploy\\assets\\images\\champions\\" : null;
         }

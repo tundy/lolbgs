@@ -30,7 +30,7 @@ namespace LeagueBackgrounds
                 Default.LeagueFolder = Static.FindLeagueOfLegends();
             if (string.IsNullOrEmpty(Default.DestinationFolder))
 #if DEBUG
-                Properties.Settings.Default.DestinationFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Backgrounds\\League Of Legends";
+                Default.DestinationFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Backgrounds\\League Of Legends";
 #else
                 Default.DestinationFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures) + "\\League Of Legends BGs";
 #endif
@@ -98,16 +98,20 @@ namespace LeagueBackgrounds
             Default.LeagueFolder = LeagueFolder_TextBox.Text;
             Default.DestinationFolder = DestinationFolder_TextBox.Text.TrimEnd('\\');
             Default.Save();
-            try
+
+            var path = Static.GetRadPath();
+            if (path != null && Directory.Exists(path))
             {
-                var images = Directory.GetFiles(Static.GetRadPath(), "*.jpg");
+                var images = Directory.GetFiles(path, "*.jpg");
                 const string pattern = ".+_[Ss]plash_[0-9]+\\.jpg";
 
-                var splashArts = (from image in images select Regex.Match(Path.GetFileName(image)?? string.Empty, pattern) into match where match.Success select match.Value).ToList();
+                var splashArts = images.Select(image => Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern))
+                    .Where(match => match.Success)
+                    .Select(match => match.Value).ToList();
                 Output_ProgressBar.Maximum = splashArts.Count;
                 _copyWorker.RunWorkerAsync(splashArts);
             }
-            catch (DirectoryNotFoundException)
+            else
             {
                 Output_TextBox.AppendText("Directory not found." + Environment.NewLine);
                 EnableMainForm();
@@ -319,6 +323,13 @@ namespace LeagueBackgrounds
             var count = 1;
             Directory.CreateDirectory(Default.DestinationFolder + "\\");
             var sourcePath = Static.GetRadPath();
+
+            if (sourcePath == null)
+            {
+                _copyWorker.ReportProgress(count, $"Rad Directory not found !{Environment.NewLine}");
+                return;
+            }
+
             const string pattern = "(.+)_[Ss]plash_[0-9]+\\.jpg";
             var ignoreList = Static.GetIgnoreList();
             var champsList = Static.GetChampsList();
@@ -347,37 +358,26 @@ namespace LeagueBackgrounds
                 if (!ignoreList.Contains(champ, StringComparer.OrdinalIgnoreCase) && !champsList.Contains(temp, StringComparer.OrdinalIgnoreCase))
 #endif
                 {
-#if DEBUG
+                    if (!Static.IsEmptySplash(new Bitmap(sourcePath + champ)))
+                    {
                         try
-                    {
-#endif
-                        if (!Static.IsEmptySplash(new Bitmap(sourcePath + champ)))
                         {
-                            try
-                            {
-                                File.Copy(sourcePath + champ, Default.DestinationFolder + "\\" + champ, true);
-                                _copyWorker.ReportProgress(count++
-                                    //, $@"File copied from {sourcePath}{champ} to {Properties.Settings.Default.DestinationFolder}\{champ} successfully!{Environment.NewLine}"
-                                    );
-                            }
-                            catch
-                            {
-                                _copyWorker.ReportProgress(count++
-                                    , $@"Failed to copy from {sourcePath}{champ} to {Default.DestinationFolder}\{champ} !{Environment.NewLine}"
-                                    );
-                            }
+                            File.Copy(sourcePath + champ, Default.DestinationFolder + "\\" + champ, true);
+                            _copyWorker.ReportProgress(count++
+                                //, $@"File copied from {sourcePath}{champ} to {Properties.Settings.Default.DestinationFolder}\{champ} successfully!{Environment.NewLine}"
+                                );
                         }
-                        else
+                        catch
                         {
-                            _copyWorker.ReportProgress(count++, $"Ignoring (not finished) {champ}{Environment.NewLine}");
+                            _copyWorker.ReportProgress(count++
+                                , $@"Failed to copy from {sourcePath}{champ} to {Default.DestinationFolder}\{champ} !{Environment.NewLine}"
+                                );
                         }
-#if DEBUG
                     }
-                    catch (Exception)
+                    else
                     {
-                        throw;
+                        _copyWorker.ReportProgress(count++, $"Ignoring (not finished) {champ}{Environment.NewLine}");
                     }
-#endif
                 }
                 else
                 {

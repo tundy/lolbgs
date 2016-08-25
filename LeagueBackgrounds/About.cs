@@ -14,7 +14,7 @@ namespace LeagueBackgrounds
         {
             try
             {
-                System.Diagnostics.Process.Start("mailto:tunder.matus+tundy@gmail.com?subject=League Of Legends Backgrounds Exporter&body=Version: " + ProductVersion);
+                System.Diagnostics.Process.Start("mailto:tunder.matus+lolBackgrounds@gmail.com?subject=League Of Legends Backgrounds Exporter&body=Version: " + ProductVersion);
 
             }
             catch
