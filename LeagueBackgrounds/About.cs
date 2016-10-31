@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System.Diagnostics;
+using System.Windows.Forms;
 
 namespace LeagueBackgrounds
 {
@@ -14,8 +15,9 @@ namespace LeagueBackgrounds
         {
             try
             {
-                System.Diagnostics.Process.Start("mailto:tunder.matus+lolBackgrounds@gmail.com?subject=League Of Legends Backgrounds Exporter&body=Version: " + ProductVersion);
-
+                Process.Start(
+                    "mailto:tunder.matus+lolBackgrounds@gmail.com?subject=League Of Legends Backgrounds Exporter&body=Version: " +
+                    ProductVersion);
             }
             catch
             {

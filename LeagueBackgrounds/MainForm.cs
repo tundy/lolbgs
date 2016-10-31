@@ -3,41 +3,41 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
-using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using static LeagueBackgrounds.Properties.Settings;
-
 #if DEBUG
 using System.Diagnostics;
+
 #endif
 
 namespace LeagueBackgrounds
 {
     public partial class MainForm : Form
     {
-        #region BackgroundWorkers
-        private readonly BackgroundWorker _copyWorker = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
-        private readonly BackgroundWorker _checkWorker = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
-        #endregion
-
         #region Init
+
         public MainForm()
         {
             #region Load last or Default Destinations
+
             if (string.IsNullOrEmpty(Default.LeagueFolder))
                 Default.LeagueFolder = Static.FindLeagueOfLegends();
             if (string.IsNullOrEmpty(Default.DestinationFolder))
 #if DEBUG
-                Default.DestinationFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Backgrounds\\League Of Legends";
+                Default.DestinationFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) +
+                                            "\\Backgrounds\\League Of Legends";
 #else
                 Default.DestinationFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures) + "\\League Of Legends BGs";
 #endif
             Default.Save();
+
             #endregion
 
             #region Adding EventHandlers to BackgroundWorkers
+
             _copyWorker.DoWork += CopyWorkerDoWork;
             _copyWorker.ProgressChanged += WorkerProgressChanged;
             _copyWorker.RunWorkerCompleted += WorkerRunWorkerCompleted;
@@ -45,18 +45,108 @@ namespace LeagueBackgrounds
             _checkWorker.DoWork += CheckWorker_DoWork;
             _checkWorker.ProgressChanged += WorkerProgressChanged;
             _checkWorker.RunWorkerCompleted += WorkerRunWorkerCompleted;
+
             #endregion
 
             InitializeComponent();
 
             #region DefaultValues
+
             TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
             TaskbarProgress.SetValue(Handle, 0, 1);
+
             #endregion
         }
+
+        #endregion
+
+        private void RunCheckWorker()
+        {
+            DisableMainForm();
+
+            Default.DestinationFolder = DestinationFolder_TextBox.Text;
+            Default.Save();
+            //_checkWorker.RunWorkerAsync();
+            try
+            {
+                var images = Directory.GetFiles(Default.DestinationFolder.TrimEnd('\\'), "*.jpg");
+                const string pattern = ".+_[Ss]plash_[2-9]+\\.jpg";
+
+                var splashArts = (from image in images
+                    select Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern)
+                    into match
+                    where match.Success
+                    select match.Value).ToList();
+                Output_ProgressBar.Maximum = splashArts.Count*2;
+                lock (_checkWorker)
+                {
+                    _checkWorker.RunWorkerAsync(splashArts);
+                }
+                //_checkWorker.RunWorkerAsync(GetSplashArts(DestinationFolder_TextBox.Text));
+            }
+            catch (DirectoryNotFoundException)
+            {
+                Output_TextBox.AppendText("Directory not found." + Environment.NewLine);
+                EnableMainForm();
+            }
+        }
+
+        private void DisableMainForm()
+        {
+            UseWaitCursor = true;
+            Cancel_Button.Visible = true;
+            Export_Button.Visible = false;
+            Options_Button.Enabled = false;
+            LeagueFolder_Button.Enabled = false;
+            LeagueFolder_TextBox.Enabled = false;
+            DestinationFolder_Button.Enabled = false;
+            DestinationFolder_TextBox.Enabled = false;
+            Output_ProgressBar.Value = 0;
+            Output_TextBox.Clear();
+        }
+
+        private void EnableMainForm()
+        {
+            WorkerRunWorkerCompleted(this, null);
+        }
+
+        private void MainForm_Activated(object sender, EventArgs e)
+        {
+            if (_copyWorker.IsBusy || _checkWorker.IsBusy) return;
+            TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
+            TaskbarProgress.SetValue(Handle, 0, 1);
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            _copyWorker.CancelAsync();
+            lock (_checkWorker)
+            {
+                _checkWorker.CancelAsync();
+            }
+            Default.LeagueFolder = LeagueFolder_TextBox.Text.TrimEnd('\\');
+            Default.DestinationFolder = DestinationFolder_TextBox.Text.TrimEnd('\\');
+            Default.Save();
+        }
+
+        #region BackgroundWorkers
+
+        private readonly BackgroundWorker _copyWorker = new BackgroundWorker
+        {
+            WorkerReportsProgress = true,
+            WorkerSupportsCancellation = true
+        };
+
+        private readonly BackgroundWorker _checkWorker = new BackgroundWorker
+        {
+            WorkerReportsProgress = true,
+            WorkerSupportsCancellation = true
+        };
+
         #endregion
 
         #region ButtonClicks
+
         private void Options_Button_Click(object sender, EventArgs e)
         {
             if (new Options().ShowDialog() == DialogResult.Retry) RunCheckWorker();
@@ -100,7 +190,7 @@ namespace LeagueBackgrounds
             Default.Save();
 
             var path = Static.GetRadPath();
-            if (path != null && Directory.Exists(path))
+            if ((path != null) && Directory.Exists(path))
             {
                 var images = Directory.GetFiles(path, "*.jpg");
                 const string pattern = ".+_[Ss]plash_[0-9]+\\.jpg";
@@ -126,34 +216,8 @@ namespace LeagueBackgrounds
                 _checkWorker.CancelAsync();
             }
         }
+
         #endregion
-
-        private void RunCheckWorker()
-        {
-            DisableMainForm();
-
-            Default.DestinationFolder = DestinationFolder_TextBox.Text;
-            Default.Save();
-            //_checkWorker.RunWorkerAsync();
-            try
-            {
-                var images = Directory.GetFiles(Default.DestinationFolder.TrimEnd('\\'), "*.jpg");
-                const string pattern = ".+_[Ss]plash_[2-9]+\\.jpg";
-
-                var splashArts = (from image in images select Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern) into match where match.Success select match.Value).ToList();
-                Output_ProgressBar.Maximum = splashArts.Count * 2;
-                lock (_checkWorker)
-                {
-                    _checkWorker.RunWorkerAsync(splashArts);
-                }
-                //_checkWorker.RunWorkerAsync(GetSplashArts(DestinationFolder_TextBox.Text));
-            }
-            catch (DirectoryNotFoundException)
-            {
-                Output_TextBox.AppendText("Directory not found." + Environment.NewLine);
-                EnableMainForm();
-            }
-        }
 
         /*IEnumerable<string> GetSplashArts(string RadPath)
         {
@@ -173,18 +237,18 @@ namespace LeagueBackgrounds
         #region BackgroundWorkers Methods
 
         private int _counter;
+
         private void WorkerProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            if ((_copyWorker.CancellationPending && _copyWorker.IsBusy) || (_checkWorker.CancellationPending && _checkWorker.IsBusy)) return;
-            if(e.ProgressPercentage > Output_ProgressBar.Maximum)
-            {
-                Output_ProgressBar.Maximum = (int)((Output_ProgressBar.Maximum+1)*1.5);
-            }
+            if ((_copyWorker.CancellationPending && _copyWorker.IsBusy) ||
+                (_checkWorker.CancellationPending && _checkWorker.IsBusy)) return;
+            if (e.ProgressPercentage > Output_ProgressBar.Maximum)
+                Output_ProgressBar.Maximum = (int) ((Output_ProgressBar.Maximum + 1)*1.5);
             Output_ProgressBar.Value = e.ProgressPercentage;
-            var percent = (decimal)e.ProgressPercentage/Output_ProgressBar.Maximum;
+            var percent = (decimal) e.ProgressPercentage/Output_ProgressBar.Maximum;
             // GC after every 10 %
-            var p = (int)(percent*100);
-            if (p > _counter+10)
+            var p = (int) (percent*100);
+            if (p > _counter + 10)
             {
                 _counter += 10;
                 GC.Collect();
@@ -193,8 +257,8 @@ namespace LeagueBackgrounds
             {
                 _counter = p;
             }
-            Text = $"[{percent.ToString("P")}] League of Legends Backgrounds Exporter";
-            if (e.UserState != null) Output_TextBox.AppendText((string)e.UserState);
+            Text = $@"[{percent:P}] League of Legends Backgrounds Exporter";
+            if (e.UserState != null) Output_TextBox.AppendText((string) e.UserState);
             TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Normal);
             TaskbarProgress.SetValue(Handle, e.ProgressPercentage, Output_ProgressBar.Maximum);
         }
@@ -248,8 +312,8 @@ namespace LeagueBackgrounds
             }
             var count = 0;
             var destinationPath = Default.DestinationFolder.EndsWith("\\")
-                                ? Default.DestinationFolder
-                                : Default.DestinationFolder + "\\";
+                ? Default.DestinationFolder
+                : Default.DestinationFolder + "\\";
 
             var tempList = new Queue<Tuple<string, Color[]>>();
             // Add every SpalshArt to list
@@ -262,15 +326,11 @@ namespace LeagueBackgrounds
                     _checkWorker.ReportProgress(count++);
                 }
                 var bmp = new Bitmap(destinationPath + art);
-                var temp = new Color[(1 + bmp.Width / 50) * (1 + bmp.Height / 50)];
+                var temp = new Color[(1 + bmp.Width/50)*(1 + bmp.Height/50)];
                 var i = 0;
                 for (var x = 0; x < bmp.Width; x += 50)
-                {
                     for (var y = 0; y < bmp.Height; y += 50)
-                    {
                         temp[i++] = bmp.GetPixel(x, y);
-                    }
-                }
                 lock (tempList)
                 {
                     tempList.Enqueue(new Tuple<string, Color[]>(art, temp));
@@ -295,26 +355,31 @@ namespace LeagueBackgrounds
                 // ReSharper disable ImplicitlyCapturedClosure
                 Parallel.ForEach(remaining, bitmap =>
                     // ReSharper restore ImplicitlyCapturedClosure
-                {
-                    if (_checkWorker.CancellationPending) return;
-                    lock (champ)
                     {
-                        // Come on riot ... Addding duplicates to same champion ...
-                        //if (bitmap.Item1.StartsWith(champ1.Item1.Split('_')[0])) continue;
-                        if (!Static.CompareSplash(champ.Item2, bitmap.Item2)) return;
-                        File.Delete(destinationPath + bitmap.Item1);
-                        lock (tmp) if (!tmp.Contains(bitmap.Item1)) tmp.Add(bitmap.Item1);
-                        _checkWorker.ReportProgress(count, $"{champ.Item1}\t is duplicate of\t {bitmap.Item1}{Environment.NewLine}");
-                    }
-                });
+                        if (_checkWorker.CancellationPending) return;
+                        lock (champ)
+                        {
+                            // Come on riot ... Addding duplicates to same champion ...
+                            //if (bitmap.Item1.StartsWith(champ1.Item1.Split('_')[0])) continue;
+                            if (!Static.CompareSplash(champ.Item2, bitmap.Item2)) return;
+                            File.Delete(destinationPath + bitmap.Item1);
+                            lock (tmp)
+                            {
+                                if (!tmp.Contains(bitmap.Item1)) tmp.Add(bitmap.Item1);
+                            }
+                            _checkWorker.ReportProgress(count,
+                                $"{champ.Item1}\t is duplicate of\t {bitmap.Item1}{Environment.NewLine}");
+                        }
+                    });
             }
-            var ignore = tmp.Where(r => !string.IsNullOrWhiteSpace(r)).Aggregate(string.Empty, (current, r) => $"{current}{r}\r\n");
+            var ignore = tmp.Where(r => !string.IsNullOrWhiteSpace(r))
+                .Aggregate(string.Empty, (current, r) => $"{current}{r}\r\n");
             ignore = ignore.Trim();
             if (ignore.Length == 0) ignore = null;
             Default.IgnoreList = ignore;
             Default.Save();
         }
-        
+
         private void CopyWorkerDoWork(object sender, DoWorkEventArgs e)
         {
             var splashArts = e.Argument as List<string>;
@@ -336,9 +401,7 @@ namespace LeagueBackgrounds
             Parallel.ForEach(splashArts, champ =>
             {
                 if (_copyWorker.CancellationPending)
-                {
                     return;
-                }
                 var match = Regex.Match(champ, pattern);
                 string temp;
                 if (match.Success)
@@ -357,72 +420,29 @@ namespace LeagueBackgrounds
 #else
                 if (!ignoreList.Contains(champ, StringComparer.OrdinalIgnoreCase) && !champsList.Contains(temp, StringComparer.OrdinalIgnoreCase))
 #endif
-                {
                     if (!Static.IsEmptySplash(new Bitmap(sourcePath + champ)))
-                    {
                         try
                         {
                             File.Copy(sourcePath + champ, Default.DestinationFolder + "\\" + champ, true);
                             _copyWorker.ReportProgress(count++
                                 //, $@"File copied from {sourcePath}{champ} to {Properties.Settings.Default.DestinationFolder}\{champ} successfully!{Environment.NewLine}"
-                                );
+                            );
                         }
                         catch
                         {
                             _copyWorker.ReportProgress(count++
-                                , $@"Failed to copy from {sourcePath}{champ} to {Default.DestinationFolder}\{champ} !{Environment.NewLine}"
-                                );
+                                ,
+                                $@"Failed to copy from {sourcePath}{champ} to {Default.DestinationFolder}\{champ} !{Environment
+                                    .NewLine}"
+                            );
                         }
-                    }
                     else
-                    {
                         _copyWorker.ReportProgress(count++, $"Ignoring (not finished) {champ}{Environment.NewLine}");
-                    }
-                }
                 else
-                {
                     _copyWorker.ReportProgress(count++, $"Ignoring {champ}{Environment.NewLine}");
-                }
             });
         }
-#endregion
 
-        private void DisableMainForm()
-        {
-            UseWaitCursor = true;
-            Cancel_Button.Visible = true;
-            Export_Button.Visible = false;
-            Options_Button.Enabled = false;
-            LeagueFolder_Button.Enabled = false;
-            LeagueFolder_TextBox.Enabled = false;
-            DestinationFolder_Button.Enabled = false;
-            DestinationFolder_TextBox.Enabled = false;
-            Output_ProgressBar.Value = 0;
-            Output_TextBox.Clear();
-        }
-
-        private void EnableMainForm()
-        {
-            WorkerRunWorkerCompleted(this, null);
-        }
-
-        private void MainForm_Activated(object sender, EventArgs e)
-        {
-            if (_copyWorker.IsBusy || _checkWorker.IsBusy) return;
-            TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
-            TaskbarProgress.SetValue(Handle, 0, 1);
-        }
-
-        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            _copyWorker.CancelAsync();
-            lock (_checkWorker)
-            {
-                _checkWorker.CancelAsync();
-            }
-            Default.LeagueFolder = LeagueFolder_TextBox.Text.TrimEnd('\\');
-            Default.DestinationFolder = DestinationFolder_TextBox.Text.TrimEnd('\\');
-            Default.Save();
-        }
+        #endregion
     }
 }

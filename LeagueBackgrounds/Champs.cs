@@ -8,19 +8,21 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LeagueBackgrounds.Properties;
 
 namespace LeagueBackgrounds
 {
     public partial class Champs : Form
     {
+        private const string Loading = @"      [LOADING...]";
+
         public Champs()
         {
             InitializeComponent();
             Load += Champs_Load;
             Shown += Champs_Shown;
         }
-        
-        private const string Loading = @"      [LOADING...]";
+
         private void Champs_Load(object sender, EventArgs e)
         {
             Text += Loading;
@@ -33,8 +35,8 @@ namespace LeagueBackgrounds
             const string pattern = "(.+)_[Ss]quare_0\\.png";
 
             var list = images.Select(image => Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern))
-                       .Where(match => match.Success)
-                       .Where(match => File.Exists($@"{source}\{match.Groups[1].Value}_0.jpg")).ToList();
+                .Where(match => match.Success)
+                .Where(match => File.Exists($@"{source}\{match.Groups[1].Value}_0.jpg")).ToList();
             var temp = Static.GetChampsList();
             var picturelist = new Picture[list.Count];
             // For loading pictures from disk
@@ -56,9 +58,8 @@ namespace LeagueBackgrounds
                             : Image.FromFile(source + list[i].Value)
                     };
                 }
-                );
+            );
             for (var j = 0; j < picturelist.Length; j++)
-            {
                 if (picturelist[j] == null) // slow loading ?
                 {
                     j--;
@@ -68,13 +69,12 @@ namespace LeagueBackgrounds
                 {
                     ChampsPanel.Controls.Add(picturelist[j]);
                 }
-            }
-            
+
             ResumeLayout();
             ChampsPanel.ResumeLayout();
             GC.Collect();
         }
-        
+
         private void Champs_Shown(object sender, EventArgs e)
         {
             ChampsPanel.SuspendLayout();
@@ -112,12 +112,13 @@ namespace LeagueBackgrounds
                 img.Image = MakeGrayscale(new Bitmap(img.Image));
             }
 
-            var ignore = temp.Where(r => !string.IsNullOrEmpty(r)).Aggregate(string.Empty, (current, r) => current + (r + "\r\n"));
+            var ignore = temp.Where(r => !string.IsNullOrEmpty(r))
+                .Aggregate(string.Empty, (current, r) => current + r + "\r\n");
             ignore = ignore.Trim();
             if (ignore.Length == 0)
                 ignore = null;
-            Properties.Settings.Default.Champs = ignore;
-            Properties.Settings.Default.Save();
+            Settings.Default.Champs = ignore;
+            Settings.Default.Save();
         }
 
         private void Close_Click(object sender, EventArgs e)
@@ -128,8 +129,8 @@ namespace LeagueBackgrounds
         private void All_Click(object sender, EventArgs e)
         {
             Cursor.Current = Cursors.WaitCursor;
-            Properties.Settings.Default.Champs = null;
-            Properties.Settings.Default.Save();
+            Settings.Default.Champs = null;
+            Settings.Default.Save();
             var source = Static.GetRadPath();
             foreach (var control in ChampsPanel.Controls.OfType<Picture>())
                 control.PictureBox.Image = Image.FromFile(source + control.Name + "_Square_0.png");
@@ -147,12 +148,13 @@ namespace LeagueBackgrounds
                 temp.Add(control.Name);
                 control.PictureBox.Image = MakeGrayscale(new Bitmap(control.PictureBox.Image));
             }
-            var ignore = temp.Where(r => !string.IsNullOrEmpty(r)).Aggregate(string.Empty, (current, r) => current + (r + "\r\n"));
+            var ignore = temp.Where(r => !string.IsNullOrEmpty(r))
+                .Aggregate(string.Empty, (current, r) => current + r + "\r\n");
             ignore = ignore.Trim();
             if (ignore.Length == 0)
                 ignore = null;
-            Properties.Settings.Default.Champs = ignore;
-            Properties.Settings.Default.Save();
+            Settings.Default.Champs = ignore;
+            Settings.Default.Save();
             Cursor.Current = Cursors.Default;
         }
 
@@ -161,7 +163,6 @@ namespace LeagueBackgrounds
             Cursor.Current = Cursors.WaitCursor;
             var temp = Static.GetChampsList();
             foreach (var img in ChampsPanel.Controls.OfType<Picture>())
-            {
                 if (temp.Contains(img.Name, StringComparer.OrdinalIgnoreCase))
                 {
                     if (img.Name == "Corki")
@@ -176,14 +177,13 @@ namespace LeagueBackgrounds
                     temp.Add(img.Name);
                     img.PictureBox.Image = MakeGrayscale(new Bitmap(img.PictureBox.Image));
                 }
-
-            }
-            var ignore = temp.Where(r => !string.IsNullOrEmpty(r)).Aggregate(string.Empty, (current, r) => current + (r + "\r\n"));
+            var ignore = temp.Where(r => !string.IsNullOrEmpty(r))
+                .Aggregate(string.Empty, (current, r) => current + r + "\r\n");
             ignore = ignore.Trim();
             if (ignore.Length == 0)
                 ignore = null;
-            Properties.Settings.Default.Champs = ignore;
-            Properties.Settings.Default.Save();
+            Settings.Default.Champs = ignore;
+            Settings.Default.Save();
             Cursor.Current = Cursors.Default;
         }
 
@@ -192,21 +192,13 @@ namespace LeagueBackgrounds
             //SuspendLayout();
             ChampsPanel.SuspendLayout();
             if (string.IsNullOrEmpty(Search.Text))
-            {
                 foreach (var img in ChampsPanel.Controls.OfType<Picture>())
-                {
                     img.Visible = true;
-                }
-            }
             else
-            {
-                // Revesre is faster 'cos it don't need to redraw so often
                 foreach (var img in ChampsPanel.Controls.OfType<Picture>().Reverse())
-                {
-                    // Ignore Apostrophe
-                    img.Visible = img.Name.IndexOf(Regex.Replace(Search.Text, @"[']+", ""), StringComparison.CurrentCultureIgnoreCase) != -1;
-                }
-            }
+                    img.Visible =
+                        img.Name.IndexOf(Regex.Replace(Search.Text, @"[']+", ""),
+                            StringComparison.CurrentCultureIgnoreCase) != -1;
             ChampsPanel.ResumeLayout();
             //ResumeLayout();
         }
@@ -221,14 +213,14 @@ namespace LeagueBackgrounds
 
             //create the grayscale ColorMatrix
             var colorMatrix = new ColorMatrix(
-               new[]
-               {
-                 new[] {.3f, .3f, .3f, 0, 0},
-                 new[] {.59f, .59f, .59f, 0, 0},
-                 new[] {.11f, .11f, .11f, 0, 0},
-                 new float[] {0, 0, 0, 1, 0},
-                 new float[] {0, 0, 0, 0, 1}
-               });
+                new[]
+                {
+                    new[] {.3f, .3f, .3f, 0, 0},
+                    new[] {.59f, .59f, .59f, 0, 0},
+                    new[] {.11f, .11f, .11f, 0, 0},
+                    new float[] {0, 0, 0, 1, 0},
+                    new float[] {0, 0, 0, 0, 1}
+                });
 
             //create some image attributes
             var attributes = new ImageAttributes();
@@ -239,7 +231,7 @@ namespace LeagueBackgrounds
             //draw the original image on the new image
             //using the grayscale color matrix
             g.DrawImage(original, new Rectangle(0, 0, original.Width, original.Height),
-               0, 0, original.Width, original.Height, GraphicsUnit.Pixel, attributes);
+                0, 0, original.Width, original.Height, GraphicsUnit.Pixel, attributes);
 
             //dispose the Graphics object
             g.Dispose();

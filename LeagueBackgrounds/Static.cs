@@ -35,15 +35,32 @@ namespace LeagueBackgrounds
 
         internal static string FindLeagueOfLegends()
         {
-            var temp = (string)Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null)
-                    ?? (string)Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Classes\VirtualStore\MACHINE\SOFTWARE\Wow6432Node\RIOT GAMES\RADS", "LOCALROOTFOLDER", null)
-                    ?? (string)Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Classes\VirtualStore\MACHINE\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null)
-                    ?? (string)Registry.GetValue(@"HKEY_CURRENT_USER\Software\Wow6432Node\Riot Games\RADS", "LOCALROOTFOLDER", null)
-                    ?? (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Wow6432Node\Riot Games\RADS", "LOCALROOTFOLDER", null)
-                    ?? (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null);
+            var temp = (string)
+                       Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null)
+                       ??
+                       (string)
+                       Registry.GetValue(
+                           @"HKEY_CURRENT_USER\SOFTWARE\Classes\VirtualStore\MACHINE\SOFTWARE\Wow6432Node\RIOT GAMES\RADS",
+                           "LOCALROOTFOLDER", null)
+                       ??
+                       (string)
+                       Registry.GetValue(
+                           @"HKEY_CURRENT_USER\SOFTWARE\Classes\VirtualStore\MACHINE\SOFTWARE\RIOT GAMES\RADS",
+                           "LOCALROOTFOLDER", null)
+                       ??
+                       (string)
+                       Registry.GetValue(@"HKEY_CURRENT_USER\Software\Wow6432Node\Riot Games\RADS", "LOCALROOTFOLDER",
+                           null)
+                       ??
+                       (string)
+                       Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Wow6432Node\Riot Games\RADS", "LOCALROOTFOLDER",
+                           null)
+                       ??
+                       (string)
+                       Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null);
             return temp != null ? Directory.GetParent(temp).ToString() : @"C:\Riot Games\League of Legends";
         }
-        
+
         internal static string GetRadPath()
         {
             var source = Default.LeagueFolder + "\\RADS\\projects\\lol_air_client\\releases\\";
@@ -57,12 +74,8 @@ namespace LeagueBackgrounds
             if (splash.Size != new Size(1215, 717)) return false;
             var color = Color.FromArgb(125, 125, 125);
             for (var x = 0; x < 32; ++x)
-            {
                 for (var y = 0; y < 32; ++y)
-                {
                     if (splash.GetPixel(x, y) != color) return false;
-                }
-            }
             return true;
         }
 
@@ -93,16 +106,16 @@ namespace LeagueBackgrounds
         public static bool IsActive(IntPtr handle)
         {
             var activeHandle = GetForegroundWindow();
-            return (activeHandle == handle);
+            return activeHandle == handle;
         }
-
-        /*[DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern bool IsWindowVisible(IntPtr hWnd);*/
 
         /*static bool IsWinVistaOrHigher()
         {
             OperatingSystem os = Environment.OSVersion;
             return (os.Platform == PlatformID.Win32NT) && (os.Version.Major >= 6);
         }*/
+
+        /*[DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern bool IsWindowVisible(IntPtr hWnd);*/
     }
 }

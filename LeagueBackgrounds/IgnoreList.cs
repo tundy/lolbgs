@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Windows.Forms;
+using LeagueBackgrounds.Properties;
 
 namespace LeagueBackgrounds
 {
     public partial class IgnoreList : Form
     {
-        private readonly DataTable _dataTable = new DataTable();
         private readonly DataGridView _dataGridView = new DataGridView();
+        private readonly DataTable _dataTable = new DataTable();
 
         public IgnoreList()
         {
@@ -50,14 +51,13 @@ namespace LeagueBackgrounds
         {
             var tmp = new List<string>();
             for (var i = 0; i < _dataTable.Rows.Count; i++)
-            {
                 tmp.Add(_dataTable.Rows[i][0].ToString());
-            }
-            var ignore = tmp.Where(r => !string.IsNullOrEmpty(r)).Aggregate(string.Empty, (current, r) => current + (r + "\r\n"));
+            var ignore = tmp.Where(r => !string.IsNullOrEmpty(r))
+                .Aggregate(string.Empty, (current, r) => current + r + "\r\n");
             ignore = ignore.Trim();
             if (ignore.Length == 0) ignore = null;
-            Properties.Settings.Default.IgnoreList = ignore;
-            Properties.Settings.Default.Save();
+            Settings.Default.IgnoreList = ignore;
+            Settings.Default.Save();
             Close();
         }
     }
