@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security;
 using Microsoft.Win32;
 using static LeagueBackgrounds.Properties.Settings;
 
@@ -35,29 +36,39 @@ namespace LeagueBackgrounds
 
         internal static string FindLeagueOfLegends()
         {
-            var temp = (string)
-                       Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null)
-                       ??
-                       (string)
-                       Registry.GetValue(
-                           @"HKEY_CURRENT_USER\SOFTWARE\Classes\VirtualStore\MACHINE\SOFTWARE\Wow6432Node\RIOT GAMES\RADS",
-                           "LOCALROOTFOLDER", null)
-                       ??
-                       (string)
-                       Registry.GetValue(
-                           @"HKEY_CURRENT_USER\SOFTWARE\Classes\VirtualStore\MACHINE\SOFTWARE\RIOT GAMES\RADS",
-                           "LOCALROOTFOLDER", null)
-                       ??
-                       (string)
-                       Registry.GetValue(@"HKEY_CURRENT_USER\Software\Wow6432Node\Riot Games\RADS", "LOCALROOTFOLDER",
-                           null)
-                       ??
-                       (string)
-                       Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Wow6432Node\Riot Games\RADS", "LOCALROOTFOLDER",
-                           null)
-                       ??
-                       (string)
-                       Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null);
+            string temp = null;
+            try
+            {
+                temp = (string)
+                           Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null)
+                           ??
+                           (string)
+                           Registry.GetValue(
+                               @"HKEY_CURRENT_USER\SOFTWARE\Classes\VirtualStore\MACHINE\SOFTWARE\Wow6432Node\RIOT GAMES\RADS",
+                               "LOCALROOTFOLDER", null)
+                           ??
+                           (string)
+                           Registry.GetValue(
+                               @"HKEY_CURRENT_USER\SOFTWARE\Classes\VirtualStore\MACHINE\SOFTWARE\RIOT GAMES\RADS",
+                               "LOCALROOTFOLDER", null)
+                           ??
+                           (string)
+                           Registry.GetValue(@"HKEY_CURRENT_USER\Software\Wow6432Node\Riot Games\RADS",
+                               "LOCALROOTFOLDER",
+                               null)
+                           ??
+                           (string)
+                           Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Wow6432Node\Riot Games\RADS",
+                               "LOCALROOTFOLDER",
+                               null)
+                           ??
+                           (string)
+                           Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\RIOT GAMES\RADS", "LOCALROOTFOLDER", null);
+            }
+            catch (SecurityException)
+            {
+                
+            }
             return temp != null ? Directory.GetParent(temp).ToString() : @"C:\Riot Games\League of Legends";
         }
 
