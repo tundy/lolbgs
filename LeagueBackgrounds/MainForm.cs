@@ -70,7 +70,7 @@ namespace LeagueBackgrounds
             try
             {
                 var images = Directory.GetFiles(Default.DestinationFolder.TrimEnd('\\'), "*.jpg");
-                const string pattern = ".+_[Ss]plash_[2-9]+\\.jpg";
+                const string pattern = ".+_[Ss]plash_[0-9]+\\.jpg";
 
                 var splashArts = (from image in images
                     select Regex.Match(Path.GetFileName(image) ?? string.Empty, pattern)
