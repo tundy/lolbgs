@@ -19,3 +19,4 @@ League of Legends Backgrounds Exporter
 <hr>
 
 <img src="Screenshot.png"/>
+<img src="Screenshot2.png"/>
