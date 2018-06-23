@@ -2,6 +2,9 @@ lolbgs
 ======
 
 League of Legends Backgrounds Exporter
+```diff
+- Doesn't work with new client.
+```
 <hr>
 <b>Done:</b>
 
