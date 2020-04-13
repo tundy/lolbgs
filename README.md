@@ -4,6 +4,7 @@ lolbgs
 League of Legends Backgrounds Exporter
 ```diff
 - Doesn't work with new client.
+Splash Arts are now in WAD files. This https://github.com/Crauzer/Obsidian supposedly can open these files.
 ```
 <hr>
 <b>Done:</b>
